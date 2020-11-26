@@ -1,0 +1,9 @@
+﻿{
+  "Id": "Report",
+  "Name": "VSReports",
+  "Author": "Voter-Science",
+  "Website": "https://github.com/Voter-Science/TRC-API-Samples",
+  "Description": "A plugin for chart reporting.",
+  "Version": "2.0.0",
+  "Tags": ["chart", "reports"]
+}
