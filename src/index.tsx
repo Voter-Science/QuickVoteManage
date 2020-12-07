@@ -103,13 +103,14 @@ const PseudoTableRow = styled.li`
     i {
       line-height: 1.3;
       font-size: 15px;
-      /* display: none; */
       position: relative;
       top: 1px;
     }
   }
   > div:nth-child(2) {
     width: 10%;
+    overflow: hidden;
+    border-right: solid 8px #fff;
   }
   > div:nth-child(3) {
     width: 25%;
@@ -211,7 +212,11 @@ export class App extends React.Component<IProps, IState> {
               this.props.handlePolicyChange(e.target.value, indx)
             }
           >
-            <option value="TopN">TopN</option>
+            {this.props.model.policyDetails.map((policy) => (
+              <option key={policy.key} value={policy.key}>
+                {policy.key}
+              </option>
+            ))}
           </EditableOption>
         </div>
         <div>
