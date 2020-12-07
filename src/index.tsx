@@ -358,7 +358,7 @@ export class App extends React.Component<IProps, IState> {
   private SortableList = SortableContainer(() => {
     return (
       <PseudoTableBody saving={this.state.saving}>
-        {this.props.model.stages.map((stage: any, index: number) => {
+        {this.state.Model.stages.map((stage: any, index: number) => {
           return (
             <this.SortableItem
               stage={stage}
@@ -489,18 +489,18 @@ export class App extends React.Component<IProps, IState> {
         <Panel>
           <Copy>
             <h3>
-              {this.props.model.title} on{" "}
-              {new Date(this.props.model.targetDate).toLocaleString()}
+              {this.state.Model.title} on{" "}
+              {new Date(this.state.Model.targetDate).toLocaleString()}
             </h3>
             <p>
-              Current stage is: <strong>{this.props.model.stage}</strong>
+              Current stage is: <strong>{this.state.Model.stage}</strong>
             </p>
-            {this.props.model.stage === -1 && (
+            {this.state.Model.stage === -1 && (
               <p>
                 <i>Election is not yet open</i>
               </p>
             )}
-            {this.props.model.done && (
+            {this.state.Model.done && (
               <p>
                 Election is <strong>done</strong>.
               </p>
