@@ -6,6 +6,8 @@ import { ToastContainer, toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
 
+import * as XC from "trc-httpshim/xclient";
+
 import TRCContext from "trc-react/dist/context/TRCContext";
 
 import { PluginShell } from "trc-react/dist/PluginShell";
@@ -18,23 +20,25 @@ import * as QV from "./QVClient";
 import { withQVContainer } from "./QVContainer";
 
 interface IState {
+  Model: QV.IQVModel;
   saving: boolean;
 }
 
 interface IProps {
+  authToken: string;
+  sheetId: string;
   model: QV.IQVModel;
-  addStage(): void;
-  removeStage(index: number): void;
-  handleTitleChange(title: string, index: number): void;
-  handlePolicyChange(policy: string, index: number): void;
-  handleForbidUndervoteChange(val: string, index: number): void;
-  handleNWinnersChange(num: string, index: number): void;
-  handleSInlineChange(val: string, index: number): void;
-  handleSSlateChange(val: string, index: number): void;
-  handleSouceChange(val: string, index: number): void;
-  updateSorting(oldIndex: number, newIndex: number): void;
-  calculateSourceValue(index: number): string;
-  save(): Promise<any>;
+}
+
+function arrayMove(arr: any[], oldIndex: number, newIndex: number) {
+  if (newIndex >= arr.length) {
+    let k = newIndex - arr.length + 1;
+    while (k--) {
+      arr.push(undefined);
+    }
+  }
+  arr.splice(newIndex, 0, arr.splice(oldIndex, 1)[0]);
+  return arr;
 }
 
 const PseudoTableHeader = styled.div<{ saving: boolean }>`
@@ -178,8 +182,177 @@ export class App extends React.Component<IProps, IState> {
     super(props);
 
     this.state = {
+      Model: props.model,
       saving: false,
     };
+
+    this.addStage = this.addStage.bind(this);
+    this.removeStage = this.removeStage.bind(this);
+
+    this.handleTitleChange = this.handleTitleChange.bind(this);
+    this.handlePolicyChange = this.handlePolicyChange.bind(this);
+    this.handleForbidUndervoteChange = this.handleForbidUndervoteChange.bind(
+      this
+    );
+    this.handleNWinnersChange = this.handleNWinnersChange.bind(this);
+    this.handleSouceChange = this.handleSouceChange.bind(this);
+    this.handleSInlineChange = this.handleSInlineChange.bind(this);
+    this.handleSSlateChange = this.handleSSlateChange.bind(this);
+
+    this.calculateSourceValue = this.calculateSourceValue.bind(this);
+
+    this.updateSorting = this.updateSorting.bind(this);
+
+    this.save = this.save.bind(this);
+  }
+
+  private addStage() {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy.push({
+      policy: "TopN",
+      title: "",
+      nWinners: 1,
+      forbidUndervote: false,
+      sourceSlate: null,
+      sourceInline: "Yes,No",
+      sourceAlternates: false,
+    });
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private removeStage(index: number) {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy.splice(index, 1);
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleTitleChange(title: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].title = title;
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handlePolicyChange(policy: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].policy = policy;
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleForbidUndervoteChange(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].forbidUndervote = val === "1";
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleNWinnersChange(num: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    if (stagesCopy[index].sourceInline === "Yes,No") {
+      alert(
+        'Invalid operation: the "Yes/No" source type supports at most one winner. Change the source type to increase the number of potential winners.'
+      );
+      return;
+    }
+    stagesCopy[index].nWinners = Number(num);
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleSInlineChange(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].sourceInline = val;
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleSSlateChange(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].sourceSlate = val;
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handleSouceChange(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+
+    if (val === "yn") {
+      stagesCopy[index].nWinners = 1;
+      stagesCopy[index].sourceInline = "Yes,No";
+      stagesCopy[index].sourceAlternates = false;
+      stagesCopy[index].sourceSlate = null;
+    }
+
+    if (val === "inline") {
+      stagesCopy[index].sourceInline = "";
+      stagesCopy[index].sourceAlternates = false;
+      stagesCopy[index].sourceSlate = null;
+    }
+
+    if (val === "slate") {
+      stagesCopy[index].sourceInline = null;
+      stagesCopy[index].sourceAlternates = false;
+      stagesCopy[index].sourceSlate = "";
+    }
+
+    if (val === "alternates") {
+      stagesCopy[index].sourceInline = null;
+      stagesCopy[index].sourceAlternates = true;
+      stagesCopy[index].sourceSlate = null;
+    }
+
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private calculateSourceValue(index: number): string {
+    const stage = this.state.Model.stages[index];
+
+    if (stage.sourceInline === "Yes,No") {
+      return "yn";
+    }
+
+    if (typeof stage.sourceInline === "string") {
+      return "inline";
+    }
+
+    if (typeof stage.sourceSlate === "string") {
+      return "slate";
+    }
+
+    if (stage.sourceAlternates) {
+      return "alternates";
+    }
+  }
+
+  private updateSorting(oldIndex: number, newIndex: number) {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    arrayMove(stagesCopy, oldIndex, newIndex);
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private save(): Promise<any> {
+    const server = "https://quickvote.voter-science.com";
+    const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
+    const sheetClient = new QV.QVClient(httpClient, this.props.sheetId);
+
+    return sheetClient.PostModel(this.state.Model).catch((err) => {
+      alert("Error: " + err.Message);
+    });
   }
 
   private SortableList = SortableContainer(() => {
@@ -208,11 +381,9 @@ export class App extends React.Component<IProps, IState> {
         <div>
           <EditableOption
             value={stage.policy}
-            onChange={(e) =>
-              this.props.handlePolicyChange(e.target.value, indx)
-            }
+            onChange={(e) => this.handlePolicyChange(e.target.value, indx)}
           >
-            {this.props.model.policyDetails.map((policy) => (
+            {this.state.Model.policyDetails.map((policy) => (
               <option key={policy.key} value={policy.key}>
                 {policy.key}
               </option>
@@ -223,14 +394,14 @@ export class App extends React.Component<IProps, IState> {
           <EditableString
             type="text"
             value={stage.title}
-            onChange={(e) => this.props.handleTitleChange(e.target.value, indx)}
+            onChange={(e) => this.handleTitleChange(e.target.value, indx)}
           />
         </div>
         <div>
           <EditableOption
             value={stage.forbidUndervote ? "1" : "0"}
             onChange={(e) =>
-              this.props.handleForbidUndervoteChange(e.target.value, indx)
+              this.handleForbidUndervoteChange(e.target.value, indx)
             }
           >
             <option value="1">Exactly</option>
@@ -241,15 +412,13 @@ export class App extends React.Component<IProps, IState> {
             min="1"
             max="4"
             value={stage.nWinners}
-            onChange={(e) =>
-              this.props.handleNWinnersChange(e.target.value, indx)
-            }
+            onChange={(e) => this.handleNWinnersChange(e.target.value, indx)}
           />
         </div>
         <div>
           <EditableOption
-            value={this.props.calculateSourceValue(indx)}
-            onChange={(e) => this.props.handleSouceChange(e.target.value, indx)}
+            value={this.calculateSourceValue(indx)}
+            onChange={(e) => this.handleSouceChange(e.target.value, indx)}
           >
             <option value="yn">Yes/No</option>
             <option value="inline">Inline</option>
@@ -272,32 +441,28 @@ export class App extends React.Component<IProps, IState> {
             </i>
           </span>
 
-          {this.props.calculateSourceValue(indx) === "inline" && (
+          {this.calculateSourceValue(indx) === "inline" && (
             <EditableString
               type="text"
               value={stage.sourceInline}
               placeholder="Enter list of comma separated names"
               style={{ width: "290px" }}
-              onChange={(e) =>
-                this.props.handleSInlineChange(e.target.value, indx)
-              }
+              onChange={(e) => this.handleSInlineChange(e.target.value, indx)}
             />
           )}
-          {this.props.calculateSourceValue(indx) === "slate" && (
+          {this.calculateSourceValue(indx) === "slate" && (
             <EditableString
               type="text"
               value={stage.sourceSlate}
               placeholder="Enter slate URL"
               style={{ width: "290px" }}
-              onChange={(e) =>
-                this.props.handleSSlateChange(e.target.value, indx)
-              }
+              onChange={(e) => this.handleSSlateChange(e.target.value, indx)}
             />
           )}
         </div>
         <RemoveStage
           className="remove-stage"
-          onClick={() => this.props.removeStage(indx)}
+          onClick={() => this.removeStage(indx)}
         >
           <i
             className="material-icons"
@@ -388,21 +553,21 @@ export class App extends React.Component<IProps, IState> {
 
           <this.SortableList
             onSortEnd={({ oldIndex, newIndex }) => {
-              this.props.updateSorting(oldIndex, newIndex);
+              this.updateSorting(oldIndex, newIndex);
             }}
             pressDelay={100}
             axis="y"
           />
 
           <HorizontalList alignRight>
-            <Button onClick={this.props.addStage} disabled={this.state.saving}>
+            <Button onClick={this.addStage} disabled={this.state.saving}>
               Add stage
             </Button>
             <Button
               disabled={this.state.saving}
               onClick={async () => {
                 this.setState({ saving: true });
-                this.props.save().then(() => {
+                this.save().then(() => {
                   toast.success("Model updated successfully.");
                   this.setState({ saving: false });
                 });

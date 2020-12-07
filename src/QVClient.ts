@@ -64,16 +64,12 @@ export class QVClient {
   }
 
   public GetModel(): Promise<IQVModel> {
-    // this.setState({ loading: true });
-    // const http = this.context.SheetClient._http;
     let plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.getAsync(uri);
   }
 
   public PostModel(model: IQVModel): Promise<void> {
-    // this.setState({ loading: true });
-    // const http = this.context.SheetClient._http;
     let plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, model);
