@@ -19,6 +19,7 @@
     "react-dom": "^16.13.1",
     "react-sortable-hoc": "^1.11.0",
     "react-toastify": "^6.0.8",
+    "react-tooltip": "^4.2.11",
     "showdown": "^1.9.1",
     "trc-analyze": "^1.6.0",
     "trc-react": "^2.9.0",
