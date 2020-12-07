@@ -247,6 +247,7 @@ export function withQVContainer<P extends object>(
     // Called by PluginMain() once sheetId is available.
     public setSheetRef(sheetRef: IPluginSheetRef): void {
       const server = "https://quickvote.voter-science.com";
+      // const server = "https://localhost:44321";
       const httpClient = XC.XClient.New(server, sheetRef.AuthToken, undefined);
       const sheetClient = new QV.QVClient(httpClient, sheetRef.SheetId);
 
