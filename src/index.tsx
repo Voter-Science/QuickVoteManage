@@ -15,6 +15,7 @@ import { Panel } from "trc-react/dist/common/Panel";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
+import { Grid } from "trc-react/dist/common/Grid";
 
 import * as QV from "./QVClient";
 import { withQVContainer } from "./QVContainer";
@@ -173,6 +174,10 @@ const RemoveStage = styled.button`
   &:active {
     outline: none;
   }
+`;
+
+const LegacyUrl = styled.a`
+  float: right;
 `;
 
 export class App extends React.Component<IProps, IState> {
@@ -501,9 +506,20 @@ export class App extends React.Component<IProps, IState> {
               {this.state.Model.title} on{" "}
               {new Date(this.state.Model.targetDate).toLocaleString()}
             </h3>
-            <p>
-              Current stage is: <strong>{this.state.Model.stage}</strong>
-            </p>
+            <Grid>
+              <p>
+                Current stage is: <strong>{this.state.Model.stage}</strong>
+              </p>
+              <LegacyUrl
+                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
+                  "el_",
+                  ""
+                )}/manage`}
+                target="_blank"
+              >
+                Open in legacy plugin
+              </LegacyUrl>
+            </Grid>
             {this.state.Model.stage === -1 && (
               <p>
                 <i>Election is not yet open</i>
