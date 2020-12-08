@@ -396,6 +396,7 @@ export class App extends React.Component<IProps, IState> {
           <EditableOption
             value={stage.policy}
             onChange={(e) => this.handlePolicyChange(e.target.value, indx)}
+            style={{ width: "54px" }}
           >
             {this.state.Model.policyDetails.map((policy) => (
               <option key={policy.key} value={policy.key}>
@@ -403,6 +404,25 @@ export class App extends React.Component<IProps, IState> {
               </option>
             ))}
           </EditableOption>
+          <span
+            data-tip={
+              this.state.Model?.policyDetails.find(
+                (x) => x.key === stage.policy
+              )?.description
+            }
+          >
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "17px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              info
+            </i>
+          </span>
         </div>
         <div>
           <EditableString
