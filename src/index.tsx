@@ -371,6 +371,17 @@ export class App extends React.Component<IProps, IState> {
   });
 
   private SortableItem = SortableElement(({ stage, indx }: any) => {
+    let sourceTooltipMessage = "";
+    const source = this.calculateSourceValue(indx);
+    if (source === "yn") sourceTooltipMessage = "Choices are “yes,no”";
+    if (source === "slate")
+      sourceTooltipMessage =
+        "Choices are pulled from a Slate page via PetitionBuilder.org";
+    if (source === "alternates")
+      sourceTooltipMessage =
+        "Choices from this stage are the losers from the previous stage.";
+    if (source === "inline")
+      sourceTooltipMessage = "Enter candidate names directly here.";
     return (
       <PseudoTableRow>
         <div>
@@ -424,7 +435,7 @@ export class App extends React.Component<IProps, IState> {
             <option value="alternates">Alternates</option>
           </EditableOption>
 
-          <span data-tip="An info tip that describes each source/candidates rule">
+          <span data-tip={sourceTooltipMessage}>
             <i
               className="material-icons"
               style={{
@@ -565,14 +576,16 @@ export class App extends React.Component<IProps, IState> {
               disabled={this.state.saving}
               onClick={async () => {
                 this.setState({ saving: true });
-                this.save().then(() => {
-                  toast.success("Model updated successfully.");
-                  this.setState({ saving: false });
-                }).catch((err) => {
-                  alert("Error: " + err.Message);
-                  toast.error("An error has occured, please try again.");
-                  this.setState({ saving: false });
-                });;
+                this.save()
+                  .then(() => {
+                    toast.success("Model updated successfully.");
+                    this.setState({ saving: false });
+                  })
+                  .catch((err) => {
+                    alert("Error: " + err.Message);
+                    toast.error("An error has occured, please try again.");
+                    this.setState({ saving: false });
+                  });
               }}
             >
               Save
