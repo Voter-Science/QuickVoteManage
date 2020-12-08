@@ -5,6 +5,7 @@ import css from "@emotion/css";
 import { ToastContainer, toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
+import DatePicker from "react-datepicker";
 
 import * as XC from "trc-httpshim/xclient";
 
@@ -138,6 +139,7 @@ const EditableTitle = styled.input`
   width: 100%;
   font-weight: 700;
   font-size: 28px;
+  margin-bottom: 8px;
   &:hover,
   &:focus {
     border: solid 1px #aaa;
@@ -210,6 +212,7 @@ export class App extends React.Component<IProps, IState> {
     this.removeStage = this.removeStage.bind(this);
 
     this.handlePageTitleChange = this.handlePageTitleChange.bind(this);
+    this.handlePageDateChange = this.handlePageDateChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handlePolicyChange = this.handlePolicyChange.bind(this);
     this.handleForbidUndervoteChange = this.handleForbidUndervoteChange.bind(
@@ -254,6 +257,12 @@ export class App extends React.Component<IProps, IState> {
   private handlePageTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const modelCopy = { ...this.state.Model };
     modelCopy.title = e.target.value;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handlePageDateChange(date: Date): void {
+    const modelCopy = { ...this.state.Model };
+    modelCopy.targetDate = date;
     this.setState({ Model: modelCopy });
   }
 
@@ -549,7 +558,11 @@ export class App extends React.Component<IProps, IState> {
               type="text"
               onChange={this.handlePageTitleChange}
             />{" "}
-            on {new Date(this.state.Model.targetDate).toLocaleString()}
+            on{" "}
+            <DatePicker
+              selected={new Date(this.state.Model.targetDate)}
+              onChange={this.handlePageDateChange}
+            />
             <Grid>
               <p>
                 Current stage is: <strong>{this.state.Model.stage}</strong>
