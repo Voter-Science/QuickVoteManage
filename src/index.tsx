@@ -131,6 +131,21 @@ const PseudoTableRow = styled.li`
   }
 `;
 
+const EditableTitle = styled.input`
+  border: none;
+  background: none;
+  display: block;
+  width: 100%;
+  font-weight: 700;
+  font-size: 28px;
+  &:hover,
+  &:focus {
+    border: solid 1px #aaa;
+    border-radius: 2px;
+    outline: none;
+  }
+`;
+
 const EditableString = styled.input`
   border: none;
   background: none;
@@ -194,6 +209,7 @@ export class App extends React.Component<IProps, IState> {
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
 
+    this.handlePageTitleChange = this.handlePageTitleChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handlePolicyChange = this.handlePolicyChange.bind(this);
     this.handleForbidUndervoteChange = this.handleForbidUndervoteChange.bind(
@@ -232,6 +248,12 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy.splice(index, 1);
     modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy });
+  }
+
+  private handlePageTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    const modelCopy = { ...this.state.Model };
+    modelCopy.title = e.target.value;
     this.setState({ Model: modelCopy });
   }
 
@@ -522,10 +544,12 @@ export class App extends React.Component<IProps, IState> {
       >
         <Panel>
           <Copy>
-            <h3>
-              {this.state.Model.title} on{" "}
-              {new Date(this.state.Model.targetDate).toLocaleString()}
-            </h3>
+            <EditableTitle
+              value={this.state.Model.title}
+              type="text"
+              onChange={this.handlePageTitleChange}
+            />{" "}
+            on {new Date(this.state.Model.targetDate).toLocaleString()}
             <Grid>
               <p>
                 Current stage is: <strong>{this.state.Model.stage}</strong>
