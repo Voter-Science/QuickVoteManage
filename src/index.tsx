@@ -23,6 +23,7 @@ import { withQVContainer } from "./QVContainer";
 
 interface IState {
   Model: QV.IQVModel;
+  isDirty: boolean;
   saving: boolean;
 }
 
@@ -206,6 +207,7 @@ export class App extends React.Component<IProps, IState> {
     this.state = {
       Model: props.model,
       saving: false,
+      isDirty: false,
     };
 
     this.addStage = this.addStage.bind(this);
@@ -251,19 +253,19 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy.splice(index, 1);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handlePageTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
     const modelCopy = { ...this.state.Model };
     modelCopy.title = e.target.value;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handlePageDateChange(date: Date): void {
     const modelCopy = { ...this.state.Model };
     modelCopy.targetDate = date;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleTitleChange(title: string, index: number): void {
@@ -271,7 +273,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].title = title;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handlePolicyChange(policy: string, index: number): void {
@@ -279,7 +281,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].policy = policy;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleForbidUndervoteChange(val: string, index: number): void {
@@ -287,7 +289,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].forbidUndervote = val === "1";
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleNWinnersChange(num: string, index: number): void {
@@ -301,7 +303,7 @@ export class App extends React.Component<IProps, IState> {
     }
     stagesCopy[index].nWinners = Number(num);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSInlineChange(val: string, index: number): void {
@@ -309,7 +311,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].sourceInline = val;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSSlateChange(val: string, index: number): void {
@@ -317,7 +319,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].sourceSlate = val;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSouceChange(val: string, index: number): void {
@@ -350,7 +352,7 @@ export class App extends React.Component<IProps, IState> {
     }
 
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private calculateSourceValue(index: number): string {
@@ -378,7 +380,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     arrayMove(stagesCopy, oldIndex, newIndex);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private save(): Promise<any> {
@@ -545,6 +547,21 @@ export class App extends React.Component<IProps, IState> {
     );
   });
 
+  componentDidMount() {
+    window.addEventListener("beforeunload", (e) => {
+      if (!this.state.isDirty) {
+        return undefined;
+      }
+
+      const confirmationMessage =
+        "It looks like you have been editing something. " +
+        "If you leave before saving, your changes will be lost.";
+
+      (e || window.event).returnValue = confirmationMessage;
+      return confirmationMessage;
+    });
+  }
+
   render() {
     return (
       <PluginShell
@@ -652,7 +669,7 @@ export class App extends React.Component<IProps, IState> {
                 this.save()
                   .then(() => {
                     toast.success("Model updated successfully.");
-                    this.setState({ saving: false });
+                    this.setState({ saving: false, isDirty: false });
                   })
                   .catch((err) => {
                     alert("Error: " + err.Message);
