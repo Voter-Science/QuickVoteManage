@@ -554,7 +554,7 @@ export class App extends React.Component<IProps, IState> {
       }
 
       const confirmationMessage =
-        "It looks like you have been editing something. " +
+        "There are unsaved changes. " +
         "If you leave before saving, your changes will be lost.";
 
       (e || window.event).returnValue = confirmationMessage;
