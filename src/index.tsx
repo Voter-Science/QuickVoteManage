@@ -350,9 +350,7 @@ export class App extends React.Component<IProps, IState> {
     const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
     const sheetClient = new QV.QVClient(httpClient, this.props.sheetId);
 
-    return sheetClient.PostModel(this.state.Model).catch((err) => {
-      alert("Error: " + err.Message);
-    });
+    return sheetClient.PostModel(this.state.Model);
   }
 
   private SortableList = SortableContainer(() => {
@@ -570,7 +568,11 @@ export class App extends React.Component<IProps, IState> {
                 this.save().then(() => {
                   toast.success("Model updated successfully.");
                   this.setState({ saving: false });
-                });
+                }).catch((err) => {
+                  alert("Error: " + err.Message);
+                  toast.error("An error has occured, please try again.");
+                  this.setState({ saving: false });
+                });;
               }}
             >
               Save
