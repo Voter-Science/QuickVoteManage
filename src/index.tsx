@@ -49,8 +49,7 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
   border-bottom: solid 1px gray;
   padding: 0.6rem 0;
   display: flex;
-  margin-bottom: 1rem;
-  margin-top: 0.5rem;
+  margin: 0.5rem -2rem 1rem -2rem;
   font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
@@ -61,13 +60,16 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
     width: 10%;
   }
   > div:nth-child(3) {
-    width: 25%;
+    width: 18%;
   }
   > div:nth-child(4) {
     width: 15%;
   }
   > div:nth-child(5) {
-    width: 47%;
+    width: 18%;
+  }
+  > div:nth-child(6) {
+    width: 36%;
   }
   ${(props) =>
     props.saving &&
@@ -78,7 +80,7 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
 `;
 
 const PseudoTableBody = styled.ul<{ saving: boolean }>`
-  margin: 0;
+  margin: 0 -2rem;
   padding: 0;
   list-style-type: none;
   font-size: 15px;
@@ -107,11 +109,12 @@ const PseudoTableRow = styled.li`
   > div:nth-child(1) {
     cursor: grab;
     width: 3%;
+    text-align: center;
     i {
       line-height: 1.3;
       font-size: 15px;
       position: relative;
-      top: 1px;
+      top: 2px;
     }
   }
   > div:nth-child(2) {
@@ -120,13 +123,16 @@ const PseudoTableRow = styled.li`
     border-right: solid 8px #fff;
   }
   > div:nth-child(3) {
-    width: 25%;
+    width: 18%;
   }
   > div:nth-child(4) {
     width: 15%;
   }
   > div:nth-child(5) {
-    width: 47%;
+    width: 18%;
+  }
+  > div:nth-child(6) {
+    width: 36%;
   }
   &:hover .remove-stage {
     display: block;
@@ -221,6 +227,8 @@ export class App extends React.Component<IProps, IState> {
       this
     );
     this.handleNWinnersChange = this.handleNWinnersChange.bind(this);
+    this.handleFilterUserChange1 = this.handleFilterUserChange1.bind(this);
+    this.handleFilterUserChange2 = this.handleFilterUserChange2.bind(this);
     this.handleSouceChange = this.handleSouceChange.bind(this);
     this.handleSInlineChange = this.handleSInlineChange.bind(this);
     this.handleSSlateChange = this.handleSSlateChange.bind(this);
@@ -302,6 +310,25 @@ export class App extends React.Component<IProps, IState> {
       return;
     }
     stagesCopy[index].nWinners = Number(num);
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy, isDirty: true });
+  }
+
+  private handleFilterUserChange1(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    stagesCopy[index].filterUser = val
+      ? `${val}:${this.state.Model.filterMetadata.columns[val][0].value}`
+      : null;
+    modelCopy.stages = stagesCopy;
+    this.setState({ Model: modelCopy, isDirty: true });
+  }
+
+  private handleFilterUserChange2(val: string, index: number): void {
+    const modelCopy = { ...this.state.Model };
+    const stagesCopy = [...this.state.Model.stages];
+    const parts = stagesCopy[index].filterUser.split(":");
+    stagesCopy[index].filterUser = val ? `${parts[0]}:${val}` : null;
     modelCopy.stages = stagesCopy;
     this.setState({ Model: modelCopy, isDirty: true });
   }
@@ -462,6 +489,7 @@ export class App extends React.Component<IProps, IState> {
             type="text"
             value={stage.title}
             onChange={(e) => this.handleTitleChange(e.target.value, indx)}
+            style={{ width: "158px" }}
           />
         </div>
         <div>
@@ -481,6 +509,44 @@ export class App extends React.Component<IProps, IState> {
             value={stage.nWinners}
             onChange={(e) => this.handleNWinnersChange(e.target.value, indx)}
           />
+        </div>
+        <div>
+          <EditableOption
+            value={stage.filterUser ? stage.filterUser.split(":")[0] : ""}
+            onChange={(e) => this.handleFilterUserChange1(e.target.value, indx)}
+            style={{ width: "64px" }}
+          >
+            <option value="">Everyone</option>
+            {this.state.Model.filterMetadata &&
+              Object.keys(this.state.Model.filterMetadata.columns).map(
+                (key) => (
+                  <option key={key} value={key}>
+                    {key}
+                  </option>
+                )
+              )}
+          </EditableOption>
+          {stage.filterUser && (
+            <>
+              {" "}
+              ={" "}
+              <EditableOption
+                value={stage.filterUser ? stage.filterUser.split(":")[1] : ""}
+                onChange={(e) =>
+                  this.handleFilterUserChange2(e.target.value, indx)
+                }
+                style={{ width: "64px" }}
+              >
+                {this.state.Model.filterMetadata.columns[
+                  stage.filterUser.split(":")[0]
+                ].map(({ value, countHint }) => (
+                  <option key={value} value={value}>
+                    {value} ({countHint})
+                  </option>
+                ))}
+              </EditableOption>
+            </>
+          )}
         </div>
         <div>
           <EditableOption
@@ -513,7 +579,7 @@ export class App extends React.Component<IProps, IState> {
               type="text"
               value={stage.sourceInline}
               placeholder="Enter list of comma separated names"
-              style={{ width: "290px" }}
+              style={{ width: "220px" }}
               onChange={(e) => this.handleSInlineChange(e.target.value, indx)}
             />
           )}
@@ -522,7 +588,7 @@ export class App extends React.Component<IProps, IState> {
               type="text"
               value={stage.sourceSlate}
               placeholder="Enter slate URL"
-              style={{ width: "290px" }}
+              style={{ width: "225px" }}
               onChange={(e) => this.handleSSlateChange(e.target.value, indx)}
             />
           )}
@@ -634,6 +700,22 @@ export class App extends React.Component<IProps, IState> {
             <div>
               nWinners{" "}
               <span data-tip="How many candidates can we vote for on this ballot?">
+                <i
+                  className="material-icons"
+                  style={{
+                    fontSize: "17px",
+                    lineHeight: "0",
+                    position: "relative",
+                    top: "4px",
+                  }}
+                >
+                  info
+                </i>
+              </span>
+            </div>
+            <div>
+              Who{" "}
+              <span data-tip="Who can vote in this stage.">
                 <i
                   className="material-icons"
                   style={{
