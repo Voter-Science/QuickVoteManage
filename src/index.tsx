@@ -5,6 +5,7 @@ import css from "@emotion/css";
 import { ToastContainer, toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
+import DatePicker from "react-datepicker";
 
 import * as XC from "trc-httpshim/xclient";
 
@@ -15,12 +16,14 @@ import { Panel } from "trc-react/dist/common/Panel";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
+import { Grid } from "trc-react/dist/common/Grid";
 
 import * as QV from "./QVClient";
 import { withQVContainer } from "./QVContainer";
 
 interface IState {
   Model: QV.IQVModel;
+  isDirty: boolean;
   saving: boolean;
 }
 
@@ -130,6 +133,22 @@ const PseudoTableRow = styled.li`
   }
 `;
 
+const EditableTitle = styled.input`
+  border: none;
+  background: none;
+  display: block;
+  width: 100%;
+  font-weight: 700;
+  font-size: 28px;
+  margin-bottom: 8px;
+  &:hover,
+  &:focus {
+    border: solid 1px #aaa;
+    border-radius: 2px;
+    outline: none;
+  }
+`;
+
 const EditableString = styled.input`
   border: none;
   background: none;
@@ -175,6 +194,10 @@ const RemoveStage = styled.button`
   }
 `;
 
+const LegacyUrl = styled.a`
+  float: right;
+`;
+
 export class App extends React.Component<IProps, IState> {
   static contextType = TRCContext;
 
@@ -184,11 +207,14 @@ export class App extends React.Component<IProps, IState> {
     this.state = {
       Model: props.model,
       saving: false,
+      isDirty: false,
     };
 
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
 
+    this.handlePageTitleChange = this.handlePageTitleChange.bind(this);
+    this.handlePageDateChange = this.handlePageDateChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handlePolicyChange = this.handlePolicyChange.bind(this);
     this.handleForbidUndervoteChange = this.handleForbidUndervoteChange.bind(
@@ -227,7 +253,19 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy.splice(index, 1);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
+  }
+
+  private handlePageTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
+    const modelCopy = { ...this.state.Model };
+    modelCopy.title = e.target.value;
+    this.setState({ Model: modelCopy, isDirty: true });
+  }
+
+  private handlePageDateChange(date: Date): void {
+    const modelCopy = { ...this.state.Model };
+    modelCopy.targetDate = date;
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleTitleChange(title: string, index: number): void {
@@ -235,7 +273,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].title = title;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handlePolicyChange(policy: string, index: number): void {
@@ -243,7 +281,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].policy = policy;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleForbidUndervoteChange(val: string, index: number): void {
@@ -251,7 +289,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].forbidUndervote = val === "1";
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleNWinnersChange(num: string, index: number): void {
@@ -265,7 +303,7 @@ export class App extends React.Component<IProps, IState> {
     }
     stagesCopy[index].nWinners = Number(num);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSInlineChange(val: string, index: number): void {
@@ -273,7 +311,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].sourceInline = val;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSSlateChange(val: string, index: number): void {
@@ -281,7 +319,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     stagesCopy[index].sourceSlate = val;
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private handleSouceChange(val: string, index: number): void {
@@ -314,7 +352,7 @@ export class App extends React.Component<IProps, IState> {
     }
 
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private calculateSourceValue(index: number): string {
@@ -342,7 +380,7 @@ export class App extends React.Component<IProps, IState> {
     const stagesCopy = [...this.state.Model.stages];
     arrayMove(stagesCopy, oldIndex, newIndex);
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.setState({ Model: modelCopy, isDirty: true });
   }
 
   private save(): Promise<any> {
@@ -350,9 +388,7 @@ export class App extends React.Component<IProps, IState> {
     const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
     const sheetClient = new QV.QVClient(httpClient, this.props.sheetId);
 
-    return sheetClient.PostModel(this.state.Model).catch((err) => {
-      alert("Error: " + err.Message);
-    });
+    return sheetClient.PostModel(this.state.Model);
   }
 
   private SortableList = SortableContainer(() => {
@@ -373,6 +409,17 @@ export class App extends React.Component<IProps, IState> {
   });
 
   private SortableItem = SortableElement(({ stage, indx }: any) => {
+    let sourceTooltipMessage = "";
+    const source = this.calculateSourceValue(indx);
+    if (source === "yn") sourceTooltipMessage = "Choices are “yes,no”";
+    if (source === "slate")
+      sourceTooltipMessage =
+        "Choices are pulled from a Slate page via PetitionBuilder.org";
+    if (source === "alternates")
+      sourceTooltipMessage =
+        "Choices from this stage are the losers from the previous stage.";
+    if (source === "inline")
+      sourceTooltipMessage = "Enter candidate names directly here.";
     return (
       <PseudoTableRow>
         <div>
@@ -382,6 +429,7 @@ export class App extends React.Component<IProps, IState> {
           <EditableOption
             value={stage.policy}
             onChange={(e) => this.handlePolicyChange(e.target.value, indx)}
+            style={{ width: "54px" }}
           >
             {this.state.Model.policyDetails.map((policy) => (
               <option key={policy.key} value={policy.key}>
@@ -389,6 +437,25 @@ export class App extends React.Component<IProps, IState> {
               </option>
             ))}
           </EditableOption>
+          <span
+            data-tip={
+              this.state.Model?.policyDetails.find(
+                (x) => x.key === stage.policy
+              )?.description
+            }
+          >
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "17px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              info
+            </i>
+          </span>
         </div>
         <div>
           <EditableString
@@ -426,7 +493,7 @@ export class App extends React.Component<IProps, IState> {
             <option value="alternates">Alternates</option>
           </EditableOption>
 
-          <span data-tip="An info tip that describes each source/candidates rule">
+          <span data-tip={sourceTooltipMessage}>
             <i
               className="material-icons"
               style={{
@@ -480,6 +547,21 @@ export class App extends React.Component<IProps, IState> {
     );
   });
 
+  componentDidMount() {
+    window.addEventListener("beforeunload", (e) => {
+      if (!this.state.isDirty) {
+        return undefined;
+      }
+
+      const confirmationMessage =
+        "There are unsaved changes. " +
+        "If you leave before saving, your changes will be lost.";
+
+      (e || window.event).returnValue = confirmationMessage;
+      return confirmationMessage;
+    });
+  }
+
   render() {
     return (
       <PluginShell
@@ -488,13 +570,30 @@ export class App extends React.Component<IProps, IState> {
       >
         <Panel>
           <Copy>
-            <h3>
-              {this.state.Model.title} on{" "}
-              {new Date(this.state.Model.targetDate).toLocaleString()}
-            </h3>
-            <p>
-              Current stage is: <strong>{this.state.Model.stage}</strong>
-            </p>
+            <EditableTitle
+              value={this.state.Model.title}
+              type="text"
+              onChange={this.handlePageTitleChange}
+            />{" "}
+            on{" "}
+            <DatePicker
+              selected={new Date(this.state.Model.targetDate)}
+              onChange={this.handlePageDateChange}
+            />
+            <Grid>
+              <p>
+                Current stage is: <strong>{this.state.Model.stage}</strong>
+              </p>
+              <LegacyUrl
+                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
+                  "el_",
+                  ""
+                )}/manage`}
+                target="_blank"
+              >
+                Open in legacy plugin
+              </LegacyUrl>
+            </Grid>
             {this.state.Model.stage === -1 && (
               <p>
                 <i>Election is not yet open</i>
@@ -567,10 +666,16 @@ export class App extends React.Component<IProps, IState> {
               disabled={this.state.saving}
               onClick={async () => {
                 this.setState({ saving: true });
-                this.save().then(() => {
-                  toast.success("Model updated successfully.");
-                  this.setState({ saving: false });
-                });
+                this.save()
+                  .then(() => {
+                    toast.success("Model updated successfully.");
+                    this.setState({ saving: false, isDirty: false });
+                  })
+                  .catch((err) => {
+                    alert("Error: " + err.Message);
+                    toast.error("An error has occured, please try again.");
+                    this.setState({ saving: false });
+                  });
               }}
             >
               Save
