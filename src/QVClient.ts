@@ -7,15 +7,14 @@ export interface IPolicyDescription {
   description: string; // Human readable description of a policy
 }
 
-
 export interface IFilterMetadataEntry {
-    value: string;
-    countHint: number;
+  value: string;
+  countHint: number;
 }
 
 export interface IFilterMetadata {
-   // public Dictionary<string, Entry[]> Columns { get; set; }
-   columns: { [columnName : string] : IFilterMetadataEntry}; 
+  // public Dictionary<string, Entry[]> Columns { get; set; }
+  columns: { [columnName: string]: IFilterMetadataEntry[] };
 }
 
 // Describe each stage of the election.
@@ -44,9 +43,9 @@ export interface IStageDescription {
   // Boolean - if set, then ths candidates from this stage are the "losers" from the previous stage.
   sourceAlternates?: boolean;
 
-  // Optional field. If not set, all users can participate in this stage. 
-  // If set, Only given users are allowed to participate in this stage. 
-  // Filter is of form: "Column:Value"        
+  // Optional field. If not set, all users can participate in this stage.
+  // If set, Only given users are allowed to participate in this stage.
+  // Filter is of form: "Column:Value"
   // Column uses the extra data from VoterInfo
   filterUser?: string;
 }
@@ -69,7 +68,7 @@ export interface IQVModel extends IQVModelEdit {
 
   policyDetails?: IPolicyDescription[];
 
-  filterMetadata? : IFilterMetadata;
+  filterMetadata?: IFilterMetadata;
 }
 
 // Client for QuickVote APIs.
