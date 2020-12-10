@@ -1,4 +1,3 @@
-import { string } from "prop-types";
 import * as XC from "trc-httpshim/xclient";
 
 // Describe an individual stage
