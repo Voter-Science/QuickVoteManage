@@ -493,7 +493,9 @@ export class App extends React.Component<IProps, IState> {
 
   private updateSorting(oldIndex: number, newIndex: number) {
     if (oldIndex > this.state.Model.stage) {
-      toast.error("Can't move a future stage before a completed or active stage.");
+      toast.error(
+        "Can't move a future stage before a completed or active stage."
+      );
       return;
     }
     const modelCopy = { ...this.state.Model };
@@ -729,22 +731,24 @@ export class App extends React.Component<IProps, IState> {
             </>
           )}
         </div>
-        <RemoveStage
-          className="remove-stage"
-          onClick={() => this.removeStage(indx)}
-        >
-          <i
-            className="material-icons"
-            style={{
-              fontSize: "17px",
-              lineHeight: "0",
-              position: "relative",
-              top: "4px",
-            }}
+        {indx > this.state.Model.stage && (
+          <RemoveStage
+            className="remove-stage"
+            onClick={() => this.removeStage(indx)}
           >
-            remove_circle
-          </i>
-        </RemoveStage>
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "17px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              remove_circle
+            </i>
+          </RemoveStage>
+        )}
       </PseudoTableRow>
     );
   });
