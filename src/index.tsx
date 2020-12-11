@@ -492,7 +492,7 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private updateSorting(oldIndex: number, newIndex: number) {
-    if (oldIndex > this.state.Model.stage) {
+    if (newIndex <= this.state.Model.stage) {
       toast.error(
         "Can't move a future stage before a completed or active stage."
       );
