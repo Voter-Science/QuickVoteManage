@@ -84,7 +84,7 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
 `;
 
 const PseudoTableBody = styled.ul<{ saving: boolean }>`
-  margin: 0 -2rem;
+  margin: 0 -2rem 1.5rem -2rem;
   padding: 0;
   list-style-type: none;
   font-size: 15px;
@@ -96,15 +96,16 @@ const PseudoTableBody = styled.ul<{ saving: boolean }>`
     `}
 `;
 
-const PseudoTableRow = styled.li`
+const PseudoTableRow = styled.li<{
+  current: boolean;
+  readonly: boolean;
+  midstage: boolean;
+}>`
   display: flex;
   padding: 0.8rem 0;
   border-bottom: solid 1px #d8d8d8;
   line-height: 1.35;
   position: relative;
-  &:last-child {
-    border-bottom: none;
-  }
   > div {
     flex-grow: 0;
     flex-shrink: 0;
@@ -124,7 +125,7 @@ const PseudoTableRow = styled.li`
   > div:nth-child(2) {
     width: 10%;
     overflow: hidden;
-    border-right: solid 8px #fff;
+    border-right: solid 8px transparent;
   }
   > div:nth-child(3) {
     width: 18%;
@@ -141,6 +142,25 @@ const PseudoTableRow = styled.li`
   &:hover .remove-stage {
     display: block;
   }
+  ${(props) =>
+    props.readonly &&
+    css`
+      opacity: 0.5;
+      pointer-events: none;
+    `}
+  ${(props) =>
+    props.current &&
+    css`
+      background: #cefdd2;
+      pointer-events: none;
+    `}
+  ${(props) =>
+    props.midstage &&
+    css`
+      border-bottom: solid 4px #13a01f;
+      pointer-events: none;
+      opacity: 0.5;
+    `}
 `;
 
 const EditableTitle = styled.input`
@@ -212,12 +232,14 @@ const SlateUrl = styled.a`
   color: #6485ff;
   font-size: 15px;
   margin-left: 8px;
+  pointer-events: all;
 `;
 
 const CreateNewSlate = styled.a`
   color: #6485ff;
   font-size: 11px;
   margin-top: 8px;
+  pointer-events: all;
 `;
 
 const CandidatesNames = styled.ul`
@@ -470,6 +492,10 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private updateSorting(oldIndex: number, newIndex: number) {
+    if (oldIndex > this.state.Model.stage) {
+      toast.error("Can't move a future stage before a completed or active stage.");
+      return;
+    }
     const modelCopy = { ...this.state.Model };
     const stagesCopy = [...this.state.Model.stages];
     arrayMove(stagesCopy, oldIndex, newIndex);
@@ -516,7 +542,11 @@ export class App extends React.Component<IProps, IState> {
       sourceTooltipMessage = "Enter candidate names directly here.";
 
     return (
-      <PseudoTableRow>
+      <PseudoTableRow
+        current={this.state.Model.stage === indx}
+        midstage={this.state.Model.stage === indx + 0.5}
+        readonly={indx < this.state.Model.stage}
+      >
         <div>
           <i className="material-icons">drag_indicator</i>
         </div>
@@ -663,7 +693,9 @@ export class App extends React.Component<IProps, IState> {
               />
               <datalist id={`slate-${indx}`}>
                 {this.state.slates.map((slate) => (
-                  <option value={slate.SlateId}>{slate.Title}</option>
+                  <option value={slate.SlateId} key={slate.SlateId}>
+                    {slate.Title}
+                  </option>
                 ))}
               </datalist>
               {stage.sourceSlate && (
@@ -678,8 +710,8 @@ export class App extends React.Component<IProps, IState> {
                     {/* @ts-ignore */}
                     {this.state.slatesMap[stage.sourceSlate].Items?.map(
                       // @ts-ignore
-                      (candidate) => (
-                        <li>[{candidate.CandidateName}]</li>
+                      (candidate, i) => (
+                        <li key={i}>[{candidate.CandidateName}]</li>
                       )
                     )}
                   </CandidatesNames>
@@ -763,9 +795,18 @@ export class App extends React.Component<IProps, IState> {
               onChange={this.handlePageDateChange}
             />
             <Grid>
-              <p>
-                Current stage is: <strong>{this.state.Model.stage}</strong>
-              </p>
+              <div>
+                {this.state.Model.stage === -1 && (
+                  <p>
+                    <i>Election is not yet open</i>
+                  </p>
+                )}
+                {this.state.Model.done && (
+                  <p>
+                    Election is <strong>done</strong>.
+                  </p>
+                )}
+              </div>
               <LegacyUrl
                 href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
                   "el_",
@@ -776,16 +817,6 @@ export class App extends React.Component<IProps, IState> {
                 Open in legacy plugin
               </LegacyUrl>
             </Grid>
-            {this.state.Model.stage === -1 && (
-              <p>
-                <i>Election is not yet open</i>
-              </p>
-            )}
-            {this.state.Model.done && (
-              <p>
-                Election is <strong>done</strong>.
-              </p>
-            )}
           </Copy>
 
           <Copy>
