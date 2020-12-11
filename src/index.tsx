@@ -9,8 +9,6 @@ import DatePicker from "react-datepicker";
 
 import * as XC from "trc-httpshim/xclient";
 
-import TRCContext from "trc-react/dist/context/TRCContext";
-
 import { PluginShell } from "trc-react/dist/PluginShell";
 import { Panel } from "trc-react/dist/common/Panel";
 import { Copy } from "trc-react/dist/common/Copy";
@@ -19,12 +17,16 @@ import { Button } from "trc-react/dist/common/Button";
 import { Grid } from "trc-react/dist/common/Grid";
 
 import * as QV from "./QVClient";
+import * as Slates from "./SlateClient";
 import { withQVContainer } from "./QVContainer";
 
 interface IState {
   Model: QV.IQVModel;
   isDirty: boolean;
   saving: boolean;
+  loadingSlates: boolean;
+  slates: Slates.ISlate[];
+  slatesMap: { [dynamic: string]: boolean | Slates.ISlate };
 }
 
 interface IProps {
@@ -43,6 +45,8 @@ function arrayMove(arr: any[], oldIndex: number, newIndex: number) {
   arr.splice(newIndex, 0, arr.splice(oldIndex, 1)[0]);
   return arr;
 }
+
+const SLATE_BASE_URL = "https://petitionbuilder.org/slate/";
 
 const PseudoTableHeader = styled.div<{ saving: boolean }>`
   border-top: solid 1px gray;
@@ -189,7 +193,7 @@ const RemoveStage = styled.button`
   color: red;
   position: absolute;
   top: 50%;
-  right: -20px;
+  right: -30px;
   transform: translateY(-50%);
   height: 46px;
   background: none;
@@ -204,8 +208,42 @@ const LegacyUrl = styled.a`
   float: right;
 `;
 
+const SlateUrl = styled.a`
+  color: #6485ff;
+  font-size: 15px;
+  margin-left: 8px;
+`;
+
+const CreateNewSlate = styled.a`
+  color: #6485ff;
+  font-size: 11px;
+  margin-top: 8px;
+`;
+
+const CandidatesNames = styled.ul`
+  margin: 8px 0 0 0;
+  padding: 0;
+  list-style-type: none;
+  font-size: 11px;
+  li {
+    display: inline;
+    &::after {
+      content: ", ";
+    }
+    &:last-child::after {
+      content: "";
+    }
+  }
+`;
+
+const SlateError = styled.p`
+  color: red;
+  margin: 8px 0 0 0;
+  font-size: 11px;
+`;
+
 export class App extends React.Component<IProps, IState> {
-  static contextType = TRCContext;
+  private slateClient: Slates.SlatesClient;
 
   public constructor(props: any) {
     super(props);
@@ -214,7 +252,14 @@ export class App extends React.Component<IProps, IState> {
       Model: props.model,
       saving: false,
       isDirty: false,
+      loadingSlates: true,
+      slates: [],
+      slatesMap: {},
     };
+
+    const server = "https://trc-login.voter-science.com";
+    const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
+    this.slateClient = new Slates.SlatesClient(httpClient, this.props.sheetId);
 
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
@@ -232,6 +277,7 @@ export class App extends React.Component<IProps, IState> {
     this.handleSouceChange = this.handleSouceChange.bind(this);
     this.handleSInlineChange = this.handleSInlineChange.bind(this);
     this.handleSSlateChange = this.handleSSlateChange.bind(this);
+    this.populateSlatesMap = this.populateSlatesMap.bind(this);
 
     this.calculateSourceValue = this.calculateSourceValue.bind(this);
 
@@ -344,9 +390,30 @@ export class App extends React.Component<IProps, IState> {
   private handleSSlateChange(val: string, index: number): void {
     const modelCopy = { ...this.state.Model };
     const stagesCopy = [...this.state.Model.stages];
-    stagesCopy[index].sourceSlate = val;
+    const normalizedVal = SLATE_BASE_URL + val.replace(SLATE_BASE_URL, "");
+    stagesCopy[index].sourceSlate = val ? normalizedVal : "";
     modelCopy.stages = stagesCopy;
+    if (val) {
+      this.populateSlatesMap(normalizedVal);
+    }
     this.setState({ Model: modelCopy, isDirty: true });
+  }
+
+  private populateSlatesMap(slateId: string) {
+    if (this.state.slatesMap[slateId] === undefined) {
+      this.slateClient
+        .GetSlate(slateId.replace(SLATE_BASE_URL, ""))
+        .then((data) => {
+          const slatesMapCopy = { ...this.state.slatesMap };
+          slatesMapCopy[slateId] = data;
+          this.setState({ slatesMap: slatesMapCopy });
+        })
+        .catch(() => {
+          const slatesMapCopy = { ...this.state.slatesMap };
+          slatesMapCopy[slateId] = false;
+          this.setState({ slatesMap: slatesMapCopy });
+        });
+    }
   }
 
   private handleSouceChange(val: string, index: number): void {
@@ -447,6 +514,7 @@ export class App extends React.Component<IProps, IState> {
         "Choices from this stage are the losers from the previous stage.";
     if (source === "inline")
       sourceTooltipMessage = "Enter candidate names directly here.";
+
     return (
       <PseudoTableRow>
         <div>
@@ -584,13 +652,49 @@ export class App extends React.Component<IProps, IState> {
             />
           )}
           {this.calculateSourceValue(indx) === "slate" && (
-            <EditableString
-              type="text"
-              value={stage.sourceSlate}
-              placeholder="Enter slate URL"
-              style={{ width: "225px" }}
-              onChange={(e) => this.handleSSlateChange(e.target.value, indx)}
-            />
+            <>
+              <EditableString
+                list={`slate-${indx}`}
+                type="text"
+                value={stage.sourceSlate.replace(SLATE_BASE_URL, "")}
+                placeholder="Enter slate URL or ID"
+                style={{ width: "200px" }}
+                onChange={(e) => this.handleSSlateChange(e.target.value, indx)}
+              />
+              <datalist id={`slate-${indx}`}>
+                {this.state.slates.map((slate) => (
+                  <option value={slate.SlateId}>{slate.Title}</option>
+                ))}
+              </datalist>
+              {stage.sourceSlate && (
+                <SlateUrl href={stage.sourceSlate} target="_blank">
+                  &#x2197;
+                </SlateUrl>
+              )}
+              <div>
+                {/* @ts-ignore */}
+                {this.state.slatesMap[stage.sourceSlate]?.Items?.length > 0 && (
+                  <CandidatesNames>
+                    {/* @ts-ignore */}
+                    {this.state.slatesMap[stage.sourceSlate].Items?.map(
+                      // @ts-ignore
+                      (candidate) => (
+                        <li>[{candidate.CandidateName}]</li>
+                      )
+                    )}
+                  </CandidatesNames>
+                )}
+                {this.state.slatesMap[stage.sourceSlate] === false && (
+                  <SlateError>Invalid slate ID</SlateError>
+                )}
+                <CreateNewSlate
+                  href="https://petitionbuilder.org/slate/create"
+                  target="_blank"
+                >
+                  Create new slate
+                </CreateNewSlate>
+              </div>
+            </>
           )}
         </div>
         <RemoveStage
@@ -625,6 +729,18 @@ export class App extends React.Component<IProps, IState> {
 
       (e || window.event).returnValue = confirmationMessage;
       return confirmationMessage;
+    });
+
+    this.slateClient
+      .GetSlates()
+      .then((data) =>
+        this.setState({ loadingSlates: false, slates: data.Results })
+      );
+
+    this.state.Model.stages.forEach((stage) => {
+      if (stage.sourceSlate) {
+        this.populateSlatesMap(stage.sourceSlate);
+      }
     });
   }
 
@@ -745,7 +861,7 @@ export class App extends React.Component<IProps, IState> {
               Add stage
             </Button>
             <Button
-              disabled={this.state.saving}
+              disabled={this.state.saving || !this.state.isDirty}
               onClick={async () => {
                 this.setState({ saving: true });
                 this.save()
