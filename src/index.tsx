@@ -10,11 +10,11 @@ import DatePicker from "react-datepicker";
 import * as XC from "trc-httpshim/xclient";
 
 import { PluginShell } from "trc-react/dist/PluginShell";
-import { Panel } from "trc-react/dist/common/Panel";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
 import { Grid } from "trc-react/dist/common/Grid";
+import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
 import * as QV from "./QVClient";
 import * as Slates from "./SlateClient";
@@ -225,7 +225,8 @@ const RemoveStage = styled.button`
 `;
 
 const LegacyUrl = styled.a`
-  float: right;
+  display: block;
+  color: #6485ff;
 `;
 
 const SlateUrl = styled.a`
@@ -265,6 +266,7 @@ const SlateError = styled.p`
 `;
 
 export class App extends React.Component<IProps, IState> {
+  private qvClient: QV.QVClient;
   private slateClient: Slates.SlatesClient;
 
   public constructor(props: any) {
@@ -279,9 +281,14 @@ export class App extends React.Component<IProps, IState> {
       slatesMap: {},
     };
 
-    const server = "https://trc-login.voter-science.com";
-    const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
-    this.slateClient = new Slates.SlatesClient(httpClient, this.props.sheetId);
+    const server1 = "https://quickvote.voter-science.com";
+    const httpClient1 = XC.XClient.New(server1, this.props.authToken, undefined);
+    this.qvClient = new QV.QVClient(httpClient1, this.props.sheetId);
+
+    const server2 = "https://trc-login.voter-science.com";
+    const httpClient2 = XC.XClient.New(server2, this.props.authToken, undefined);
+    this.slateClient = new Slates.SlatesClient(httpClient2, this.props.sheetId);
+
 
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
@@ -506,11 +513,7 @@ export class App extends React.Component<IProps, IState> {
   }
 
   private save(): Promise<any> {
-    const server = "https://quickvote.voter-science.com";
-    const httpClient = XC.XClient.New(server, this.props.authToken, undefined);
-    const sheetClient = new QV.QVClient(httpClient, this.props.sheetId);
-
-    return sheetClient.PostModel(this.state.Model);
+    return this.qvClient.PostModel(this.state.Model);
   }
 
   private SortableList = SortableContainer(() => {
@@ -786,31 +789,18 @@ export class App extends React.Component<IProps, IState> {
         description="A plugin for managing elections."
         title="QuickVote-Manage"
       >
-        <Panel>
-          <Copy>
-            <EditableTitle
-              value={this.state.Model.title}
-              type="text"
-              onChange={this.handlePageTitleChange}
-            />{" "}
-            on{" "}
-            <DatePicker
-              selected={new Date(this.state.Model.targetDate)}
-              onChange={this.handlePageDateChange}
-            />
-            <Grid>
-              <div>
-                {this.state.Model.stage === -1 && (
-                  <p>
-                    <i>Election is not yet open</i>
-                  </p>
-                )}
-                {this.state.Model.done && (
-                  <p>
-                    Election is <strong>done</strong>.
-                  </p>
-                )}
-              </div>
+        <TabsPanel
+          initialTab={"[2] Agenda"}
+          tabNames={[
+            "[1] Credentials",
+            "[2] Agenda",
+            "[3] Run",
+            "[4] Reports",
+          ]}
+        >
+          <>
+            <Copy>
+              <h3>Determines who is allowed to vote in the election</h3>
               <LegacyUrl
                 href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
                   "el_",
@@ -818,104 +808,169 @@ export class App extends React.Component<IProps, IState> {
                 )}/manage`}
                 target="_blank"
               >
-                Open in legacy plugin
+                Please access this functionality on the legacy management page
               </LegacyUrl>
-            </Grid>
-          </Copy>
-
-          <Copy>
-            <h4 style={{ marginTop: `2rem` }}>Stages:</h4>
-          </Copy>
-
-          <ReactTooltip />
-
-          <PseudoTableHeader saving={this.state.saving}>
-            <div />
-            <div>
-              Policy{" "}
-              <span data-tip="The rules for this stage, such as whether winners need a majority or just plurality, handling ties, runoffs, etc">
-                <i
-                  className="material-icons"
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: "0",
-                    position: "relative",
-                    top: "4px",
-                  }}
+            </Copy>
+          </>
+          <>
+            <Copy>
+              <EditableTitle
+                value={this.state.Model.title}
+                type="text"
+                onChange={this.handlePageTitleChange}
+              />{" "}
+              on{" "}
+              <DatePicker
+                selected={new Date(this.state.Model.targetDate)}
+                onChange={this.handlePageDateChange}
+              />
+              <Grid>
+                <div>
+                  {this.state.Model.stage === -1 && (
+                    <p>
+                      <i>Election is not yet open</i>
+                    </p>
+                  )}
+                  {this.state.Model.done && (
+                    <p>
+                      Election is <strong>done</strong>.
+                    </p>
+                  )}
+                </div>
+                <LegacyUrl
+                  href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
+                    "el_",
+                    ""
+                  )}/manage`}
+                  target="_blank"
+                  style={{ textAlign: "right" }}
                 >
-                  info
-                </i>
-              </span>
-            </div>
-            <div>Title</div>
-            <div>
-              nWinners{" "}
-              <span data-tip="How many candidates can we vote for on this ballot?">
-                <i
-                  className="material-icons"
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: "0",
-                    position: "relative",
-                    top: "4px",
-                  }}
-                >
-                  info
-                </i>
-              </span>
-            </div>
-            <div>
-              Who{" "}
-              <span data-tip="Who can vote in this stage.">
-                <i
-                  className="material-icons"
-                  style={{
-                    fontSize: "17px",
-                    lineHeight: "0",
-                    position: "relative",
-                    top: "4px",
-                  }}
-                >
-                  info
-                </i>
-              </span>
-            </div>
-            <div>Source</div>
-          </PseudoTableHeader>
+                  Open in legacy plugin
+                </LegacyUrl>
+              </Grid>
+            </Copy>
 
-          <this.SortableList
-            onSortEnd={({ oldIndex, newIndex }) => {
-              this.updateSorting(oldIndex, newIndex);
-            }}
-            pressDelay={100}
-            axis="y"
-          />
+            <Copy>
+              <h4 style={{ marginTop: `2rem` }}>Stages:</h4>
+            </Copy>
 
-          <HorizontalList alignRight>
-            <Button onClick={this.addStage} disabled={this.state.saving}>
-              Add stage
-            </Button>
-            <Button
-              disabled={this.state.saving || !this.state.isDirty}
-              onClick={async () => {
-                this.setState({ saving: true });
-                this.save()
-                  .then(() => {
-                    toast.success("Model updated successfully.");
-                    this.setState({ saving: false, isDirty: false });
-                  })
-                  .catch((err) => {
-                    alert("Error: " + err.Message);
-                    toast.error("An error has occured, please try again.");
-                    this.setState({ saving: false });
-                  });
+            <ReactTooltip />
+
+            <PseudoTableHeader saving={this.state.saving}>
+              <div />
+              <div>
+                Policy{" "}
+                <span data-tip="The rules for this stage, such as whether winners need a majority or just plurality, handling ties, runoffs, etc">
+                  <i
+                    className="material-icons"
+                    style={{
+                      fontSize: "17px",
+                      lineHeight: "0",
+                      position: "relative",
+                      top: "4px",
+                    }}
+                  >
+                    info
+                  </i>
+                </span>
+              </div>
+              <div>Title</div>
+              <div>
+                nWinners{" "}
+                <span data-tip="How many candidates can we vote for on this ballot?">
+                  <i
+                    className="material-icons"
+                    style={{
+                      fontSize: "17px",
+                      lineHeight: "0",
+                      position: "relative",
+                      top: "4px",
+                    }}
+                  >
+                    info
+                  </i>
+                </span>
+              </div>
+              <div>
+                Who{" "}
+                <span data-tip="Who can vote in this stage.">
+                  <i
+                    className="material-icons"
+                    style={{
+                      fontSize: "17px",
+                      lineHeight: "0",
+                      position: "relative",
+                      top: "4px",
+                    }}
+                  >
+                    info
+                  </i>
+                </span>
+              </div>
+              <div>Source</div>
+            </PseudoTableHeader>
+
+            <this.SortableList
+              onSortEnd={({ oldIndex, newIndex }) => {
+                this.updateSorting(oldIndex, newIndex);
               }}
-            >
-              Save
-            </Button>
-          </HorizontalList>
-        </Panel>
+              pressDelay={100}
+              axis="y"
+            />
 
+            <HorizontalList alignRight>
+              <Button onClick={this.addStage} disabled={this.state.saving}>
+                Add stage
+              </Button>
+              <Button
+                disabled={this.state.saving || !this.state.isDirty}
+                onClick={async () => {
+                  this.setState({ saving: true });
+                  this.save()
+                    .then(() => {
+                      toast.success("Model updated successfully.");
+                      this.setState({ saving: false, isDirty: false });
+                    })
+                    .catch((err) => {
+                      alert("Error: " + err.Message);
+                      toast.error("An error has occured, please try again.");
+                      this.setState({ saving: false });
+                    });
+                }}
+              >
+                Save
+              </Button>
+            </HorizontalList>
+          </>
+          <>
+            <Copy>
+              <h3>Run your election</h3>
+              <LegacyUrl
+                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
+                  "el_",
+                  ""
+                )}/manage`}
+                target="_blank"
+              >
+                Please access this functionality on the legacy management page
+              </LegacyUrl>
+            </Copy>
+          </>
+          <>
+            <Copy>
+              <h3>Downloading CSVs reports</h3>
+              <LegacyUrl
+                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
+                  "el_",
+                  ""
+                )}/manage`}
+                target="_blank"
+              >
+                Please access this functionality on the legacy management page
+              </LegacyUrl>
+            </Copy>
+          </>
+        </TabsPanel>
         <ToastContainer />
       </PluginShell>
     );
