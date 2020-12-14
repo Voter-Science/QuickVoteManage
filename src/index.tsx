@@ -25,6 +25,8 @@ interface IState {
   isDirty: boolean;
   saving: boolean;
   loadingSlates: boolean;
+  sendingLinks: boolean;
+  linksSent: boolean;
   slates: Slates.ISlate[];
   slatesMap: { [dynamic: string]: boolean | Slates.ISlate };
 }
@@ -265,6 +267,12 @@ const SlateError = styled.p`
   font-size: 11px;
 `;
 
+const CSVIcon = styled.img`
+  width: 24px;
+  position: relative;
+  top: 5px;
+`;
+
 export class App extends React.Component<IProps, IState> {
   private qvClient: QV.QVClient;
   private slateClient: Slates.SlatesClient;
@@ -277,18 +285,27 @@ export class App extends React.Component<IProps, IState> {
       saving: false,
       isDirty: false,
       loadingSlates: true,
+      sendingLinks: false,
+      linksSent: false,
       slates: [],
       slatesMap: {},
     };
 
     const server1 = "https://quickvote.voter-science.com";
-    const httpClient1 = XC.XClient.New(server1, this.props.authToken, undefined);
+    const httpClient1 = XC.XClient.New(
+      server1,
+      this.props.authToken,
+      undefined
+    );
     this.qvClient = new QV.QVClient(httpClient1, this.props.sheetId);
 
     const server2 = "https://trc-login.voter-science.com";
-    const httpClient2 = XC.XClient.New(server2, this.props.authToken, undefined);
+    const httpClient2 = XC.XClient.New(
+      server2,
+      this.props.authToken,
+      undefined
+    );
     this.slateClient = new Slates.SlatesClient(httpClient2, this.props.sheetId);
-
 
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
@@ -313,6 +330,8 @@ export class App extends React.Component<IProps, IState> {
     this.updateSorting = this.updateSorting.bind(this);
 
     this.save = this.save.bind(this);
+
+    this.sendSecretLinks = this.sendSecretLinks.bind(this);
   }
 
   private addStage() {
@@ -514,6 +533,18 @@ export class App extends React.Component<IProps, IState> {
 
   private save(): Promise<any> {
     return this.qvClient.PostModel(this.state.Model);
+  }
+
+  private sendSecretLinks(e: React.MouseEvent<HTMLAnchorElement>) {
+    e.preventDefault();
+    const proceed = confirm("Are you sure you want to continue?");
+    if (proceed) {
+      this.setState({ sendingLinks: true });
+      this.qvClient
+        .SendLinks()
+        .then(() => this.setState({ linksSent: true, sendingLinks: false }))
+        .catch(() => this.setState({ sendingLinks: false }));
+    }
   }
 
   private SortableList = SortableContainer(() => {
@@ -790,12 +821,13 @@ export class App extends React.Component<IProps, IState> {
         title="QuickVote-Manage"
       >
         <TabsPanel
-          initialTab={"[2] Agenda"}
+          initialTab={"[3] Agenda"}
           tabNames={[
             "[1] Credentials",
-            "[2] Agenda",
-            "[3] Run",
-            "[4] Reports",
+            "[2] Invites",
+            "[3] Agenda",
+            "[4] Run",
+            "[5] Reports",
           ]}
         >
           <>
@@ -810,6 +842,57 @@ export class App extends React.Component<IProps, IState> {
               >
                 Please access this functionality on the legacy management page
               </LegacyUrl>
+            </Copy>
+          </>
+          <>
+            <Copy>
+              <p>
+                You have{" "}
+                <strong>
+                  {this.state.Model.credentialMetadata.totalUsers}
+                </strong>{" "}
+                possible voters.
+              </p>
+              <p>There are two ways to invite people to this election:</p>
+              <ol>
+                <li>
+                  Use a public link:{" "}
+                  <a
+                    href={this.state.Model.credentialMetadata.publicVoteUrl}
+                    target="_blank"
+                  >
+                    {this.state.Model.credentialMetadata.publicVoteUrl}
+                  </a>
+                </li>
+                <li>
+                  Send each individual their own personal secret link.
+                  <ul>
+                    <li>
+                      <a
+                        href={
+                          this.state.Model.credentialMetadata
+                            .urlCsvDownloadSecretLinks
+                        }
+                      >
+                        Download all secret links
+                      </a>{" "}
+                      <CSVIcon src="https://trcanvasdata.blob.core.windows.net/publicimages/export-csv.png" />{" "}
+                      – you can send these yourself via a mail merge
+                    </li>
+                    <li>
+                      <a href="#" onClick={this.sendSecretLinks}>
+                        Email out secret links
+                      </a>
+                      {this.state.sendingLinks && (
+                        <strong> [sending...]</strong>
+                      )}
+                      {this.state.linksSent && <strong> [sent ✓]</strong>} –
+                      participants will receive an invite from{" "}
+                      <strong>info@Voter-science.com</strong>
+                    </li>
+                  </ul>
+                </li>
+              </ol>
             </Copy>
           </>
           <>
