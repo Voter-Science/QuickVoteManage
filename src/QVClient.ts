@@ -16,6 +16,36 @@ export interface IFilterMetadata {
   columns: { [columnName: string]: IFilterMetadataEntry[] };
 }
 
+// Describes reports that are available for download.
+// These can contstruct hyperlinks.
+export interface IReportMetadata 
+{
+  title : string;
+  details : string;
+
+  // This hyperlink will point to an endpoint that provides a CSV download. 
+  urlCsvDownload : string; // https://quickvote.... 
+}
+
+export interface ICredentialMetadata 
+{
+  // Users in the credential list. 
+  totalUsers : number;
+
+  // A full url for the public invite link. 
+  publicVoteUrl : string;
+
+  urlCsvDownloadSecretLinks: string; // Url to download secret links. 
+}
+
+// Called from polling endpoint 
+export interface IManageResponse {
+  numUsers: number;
+  quickPollCountBallotsReceived: number;
+  countBallotsReceived: number;
+  errorMessage: string; // critical configuration error. Warn and block moving.
+}
+
 // Describe each stage of the election.
 export interface IStageDescription {
   // Policy determines the voting rules for this stage.
@@ -65,9 +95,16 @@ export interface IQVModel extends IQVModelEdit {
   // -1 if we haven't started the election yet.
   stage: number;
 
+  // Stage and round combined. 
+  stageRoundMoniker: number;
+
   policyDetails?: IPolicyDescription[];
 
   filterMetadata?: IFilterMetadata;
+
+  reportMetadata? : IReportMetadata[];
+
+  credentialMetadata? : ICredentialMetadata;
 }
 
 // Client for QuickVote APIs.
@@ -90,5 +127,19 @@ export class QVClient {
     let plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, model);
+  }
+
+  public PostMoveToNextRound(stageRoundMoniker : number): Promise<void> {
+    let plainUri = `/api/manage/${this._sheetId}/MoveToNextRound?round=${stageRoundMoniker}`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, {});
+  }
+
+  public GetPollResult(stageRoundMoniker : number) : Promise<IManageResponse>
+  {
+    var shortId = this._sheetId.substr(3);
+    let plainUri = `/election/${shortId}/ajaxmanage?round=${stageRoundMoniker}`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.getAsync<IManageResponse>(uri);
   }
 }
