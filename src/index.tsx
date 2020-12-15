@@ -16,6 +16,8 @@ import { Button } from "trc-react/dist/common/Button";
 import { Grid } from "trc-react/dist/common/Grid";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
+import Reports from "./tabs/Reports";
+
 import * as QV from "./QVClient";
 import * as Slates from "./SlateClient";
 import { withQVContainer } from "./QVContainer";
@@ -830,7 +832,10 @@ export class App extends React.Component<IProps, IState> {
         title="QuickVote-Manage"
       >
         <TabsPanel
-          initialTab={new URLSearchParams(window.location.search).get("tab") || "[3] Agenda"}
+          initialTab={
+            new URLSearchParams(window.location.search).get("tab") ||
+            "[3] Agenda"
+          }
           tabNames={[
             "[1] Credentials",
             "[2] Invites",
@@ -1050,18 +1055,7 @@ export class App extends React.Component<IProps, IState> {
             </Copy>
           </>
           <>
-            <Copy>
-              <h3>Downloading CSVs reports</h3>
-              <LegacyUrl
-                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
-                  "el_",
-                  ""
-                )}/manage`}
-                target="_blank"
-              >
-                Please access this functionality on the legacy management page
-              </LegacyUrl>
-            </Copy>
+            <Reports model={this.state.Model} />
           </>
         </TabsPanel>
         <ToastContainer />
