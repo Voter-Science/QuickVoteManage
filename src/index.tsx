@@ -332,6 +332,7 @@ export class App extends React.Component<IProps, IState> {
     this.save = this.save.bind(this);
 
     this.sendSecretLinks = this.sendSecretLinks.bind(this);
+    this.handleTabClick = this.handleTabClick.bind(this);
   }
 
   private addStage() {
@@ -545,6 +546,14 @@ export class App extends React.Component<IProps, IState> {
         .then(() => this.setState({ linksSent: true, sendingLinks: false }))
         .catch(() => this.setState({ sendingLinks: false }));
     }
+  }
+
+  private handleTabClick(tab: string) {
+    const searchParams = new URLSearchParams(window.location.search);
+    searchParams.set("tab", tab);
+    const newRelativePathQuery =
+      window.location.pathname + "?" + searchParams.toString();
+    history.pushState(null, "", newRelativePathQuery);
   }
 
   private SortableList = SortableContainer(() => {
@@ -821,7 +830,7 @@ export class App extends React.Component<IProps, IState> {
         title="QuickVote-Manage"
       >
         <TabsPanel
-          initialTab={"[3] Agenda"}
+          initialTab={new URLSearchParams(window.location.search).get("tab") || "[3] Agenda"}
           tabNames={[
             "[1] Credentials",
             "[2] Invites",
@@ -829,6 +838,7 @@ export class App extends React.Component<IProps, IState> {
             "[4] Run",
             "[5] Reports",
           ]}
+          onTabClick={this.handleTabClick}
         >
           <>
             <Copy>
