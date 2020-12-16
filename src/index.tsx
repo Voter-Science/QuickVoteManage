@@ -16,6 +16,7 @@ import { Button } from "trc-react/dist/common/Button";
 import { Grid } from "trc-react/dist/common/Grid";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
+import Invites from "./tabs/Invites";
 import Reports from "./tabs/Reports";
 
 import * as QV from "./QVClient";
@@ -27,8 +28,6 @@ interface IState {
   isDirty: boolean;
   saving: boolean;
   loadingSlates: boolean;
-  sendingLinks: boolean;
-  linksSent: boolean;
   slates: Slates.ISlate[];
   slatesMap: { [dynamic: string]: boolean | Slates.ISlate };
 }
@@ -269,12 +268,6 @@ const SlateError = styled.p`
   font-size: 11px;
 `;
 
-const CSVIcon = styled.img`
-  width: 24px;
-  position: relative;
-  top: 5px;
-`;
-
 export class App extends React.Component<IProps, IState> {
   private qvClient: QV.QVClient;
   private slateClient: Slates.SlatesClient;
@@ -287,8 +280,6 @@ export class App extends React.Component<IProps, IState> {
       saving: false,
       isDirty: false,
       loadingSlates: true,
-      sendingLinks: false,
-      linksSent: false,
       slates: [],
       slatesMap: {},
     };
@@ -333,7 +324,6 @@ export class App extends React.Component<IProps, IState> {
 
     this.save = this.save.bind(this);
 
-    this.sendSecretLinks = this.sendSecretLinks.bind(this);
     this.handleTabClick = this.handleTabClick.bind(this);
   }
 
@@ -536,18 +526,6 @@ export class App extends React.Component<IProps, IState> {
 
   private save(): Promise<any> {
     return this.qvClient.PostModel(this.state.Model);
-  }
-
-  private sendSecretLinks(e: React.MouseEvent<HTMLAnchorElement>) {
-    e.preventDefault();
-    const proceed = confirm("Are you sure you want to continue?");
-    if (proceed) {
-      this.setState({ sendingLinks: true });
-      this.qvClient
-        .SendLinks()
-        .then(() => this.setState({ linksSent: true, sendingLinks: false }))
-        .catch(() => this.setState({ sendingLinks: false }));
-    }
   }
 
   private handleTabClick(tab: string) {
@@ -860,55 +838,7 @@ export class App extends React.Component<IProps, IState> {
             </Copy>
           </>
           <>
-            <Copy>
-              <p>
-                You have{" "}
-                <strong>
-                  {this.state.Model.credentialMetadata.totalUsers}
-                </strong>{" "}
-                possible voters.
-              </p>
-              <p>There are two ways to invite people to this election:</p>
-              <ol>
-                <li>
-                  Use a public link:{" "}
-                  <a
-                    href={this.state.Model.credentialMetadata.publicVoteUrl}
-                    target="_blank"
-                  >
-                    {this.state.Model.credentialMetadata.publicVoteUrl}
-                  </a>
-                </li>
-                <li>
-                  Send each individual their own personal secret link.
-                  <ul>
-                    <li>
-                      <a
-                        href={
-                          this.state.Model.credentialMetadata
-                            .urlCsvDownloadSecretLinks
-                        }
-                      >
-                        Download all secret links
-                      </a>{" "}
-                      <CSVIcon src="https://trcanvasdata.blob.core.windows.net/publicimages/export-csv.png" />{" "}
-                      – you can send these yourself via a mail merge
-                    </li>
-                    <li>
-                      <a href="#" onClick={this.sendSecretLinks}>
-                        Email out secret links
-                      </a>
-                      {this.state.sendingLinks && (
-                        <strong> [sending...]</strong>
-                      )}
-                      {this.state.linksSent && <strong> [sent ✓]</strong>} –
-                      participants will receive an invite from{" "}
-                      <strong>info@Voter-science.com</strong>
-                    </li>
-                  </ul>
-                </li>
-              </ol>
-            </Copy>
+            <Invites model={this.state.Model} client={this.qvClient} />
           </>
           <>
             <Copy>
