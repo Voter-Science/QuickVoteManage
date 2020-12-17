@@ -128,7 +128,7 @@ export class QVClient {
   }
 
   public PostMoveToNextRound(stageRoundMoniker: number): Promise<void> {
-    let plainUri = `/api/manage/${this._sheetId}/MoveToNextRound?round=${stageRoundMoniker}`;
+    let plainUri = `/api/manage/${this._sheetId}/MoveNextRound?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
@@ -137,7 +137,7 @@ export class QVClient {
     var shortId = this._sheetId.substr(3);
     let plainUri = `/election/${shortId}/ajaxmanage?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
-    return this._http.getAsync<IManageResponse>(uri);
+    return this._http.postAsync<IManageResponse>(uri, {});
   }
 
   public SendLinks(): Promise<void> {

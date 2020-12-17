@@ -17,6 +17,7 @@ import { Grid } from "trc-react/dist/common/Grid";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
 import Invites from "./tabs/Invites";
+import Run from "./tabs/Run";
 import Reports from "./tabs/Reports";
 
 import * as QV from "./QVClient";
@@ -971,18 +972,15 @@ export class App extends React.Component<IProps, IState> {
             </HorizontalList>
           </>
           <>
-            <Copy>
-              <h3>Run your election</h3>
-              <LegacyUrl
-                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
-                  "el_",
-                  ""
-                )}/manage`}
-                target="_blank"
-              >
-                Please access this functionality on the legacy management page
-              </LegacyUrl>
-            </Copy>
+            <Run
+              model={this.state.Model}
+              client={this.qvClient}
+              setModel={(model: QV.IQVModel, callback: any) =>
+                this.setState({ Model: model }, () =>
+                  callback(this.state.Model)
+                )
+              }
+            />
           </>
           <>
             <Reports model={this.state.Model} />
