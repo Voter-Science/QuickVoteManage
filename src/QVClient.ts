@@ -77,6 +77,48 @@ export interface IStageDescription {
   filterUser?: string;
 }
 
+
+export interface ITallyResultsEntry
+{
+  name: string; // Candidate name. Matches candidate list. 
+  votes: number; // # of votes received. 
+  votePercent : string; // % of total vote. 
+
+  // True = this candidate won the round. (and will not appear on next ballot
+  // False = this candidate lost the round (and will not appear on next ballot)
+  // null/undefined - this candidate will be in runoff election next round.   
+  winner? : boolean; // Win, Lose, Draw
+
+  reason : string; // human-readable string for explaining which rule determined Winner.
+}
+
+// Interface for posting partial results. 
+interface IPostResultEntry {
+  name: string;
+  result: string; // should be string literal:  "win", "lose", "draw"
+};
+
+interface IPostResult {
+  round: number; // round this is intended for
+  results: IPostResultEntry[];
+}
+
+
+
+export interface ITallyResults
+{
+  // Candidate results from last ballot. 
+  // Sorted in decreasing order from most to least. 
+  results2 : ITallyResultsEntry[];
+
+  // How many total winners. 
+  // This is also how many max votes on each per-ballot.
+  nSlots : number;
+
+  // Number of ballots cast. Very important for determining what's a majority. 
+  totalBallots : number;
+}
+
 // Subset of fields that can be edited
 export interface IQVModelEdit {
   title: string;
@@ -92,6 +134,16 @@ export interface IQVModel extends IQVModelEdit {
   // 0-based index into "current stage".
   // -1 if we haven't started the election yet.
   stage: number;
+
+  //  If a non-zero length string, there's an active quick poll is out! 
+  activeQuickPollMessage : string;
+
+
+  // undefined if voting is open (we don't have any results yet).
+  // Non-null if voting is closed and we can no longer vote in this round.
+  // Happens for manual voting policies. When set, display these results to the admin and 
+  // let them determine winners. 
+  partialResults : ITallyResults;
 
   // Stage and round combined.
   stageRoundMoniker: number;
