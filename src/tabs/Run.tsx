@@ -14,6 +14,8 @@ const ButtonMajor = styled.button`
   width: 200px;
   height: 50px;
   font-weight: 700;
+  display: block;
+  margin-bottom: 1rem;
 `;
 
 interface IProps {
@@ -39,8 +41,39 @@ function Run({ client, model, setModel }: IProps) {
     });
   }
 
+  function startQuickPoll() {
+    const message = prompt("Enter the QuickPoll messsage:", "");
+
+    if (message) {
+      setLoading(true);
+      setStageResults(null);
+      client.PostStartQuickPoll(message).then(() => {
+        client.GetModel().then((data) => {
+          setModel(data, fetchStageResults);
+          setLoading(false);
+        });
+      });
+    }
+  }
+
+  function closeQuickPoll() {
+    setLoading(true);
+    setStageResults(null);
+    client.PostCloseQuickPoll().then(() => {
+      client.GetModel().then((data) => {
+        setModel(data, fetchStageResults);
+        setLoading(false);
+      });
+    });
+  }
+
   function fetchStageResults(stageModel: QV.IQVModel) {
-    if (stageModel.stageRoundMoniker > 0 && stageModel.stage % 1 === 0) {
+    if (
+      (stageModel.stageRoundMoniker > 0 && stageModel.stage % 1 === 0) ||
+      (stageModel.stageRoundMoniker > 0 &&
+        stageModel.stage % 1 !== 0 &&
+        stageModel.activeQuickPollMessage)
+    ) {
       client
         .GetPollResult(stageModel.stageRoundMoniker)
         .then((data) => setStageResults(data));
@@ -78,7 +111,7 @@ function Run({ client, model, setModel }: IProps) {
             <>
               <p>
                 Voting is open for{" "}
-                <strong>{model.stages[model.stage].title}</strong>.
+                <strong>{model.stages[model.stage].title}</strong>
               </p>
               {stageResults ? (
                 <p>
@@ -101,16 +134,46 @@ function Run({ client, model, setModel }: IProps) {
               </ButtonMajor>
             </>
           )}
-          {model.stage >= 0 && model.stage % 1 !== 0 && (
-            <>
-              <p>Inbetween votes.</p>
-              <ButtonMajor
-                onClick={() => moveToNextRound(model.stageRoundMoniker)}
-              >
-                Next round
-              </ButtonMajor>
-            </>
-          )}
+          {model.stage >= 0 &&
+            model.stage % 1 !== 0 &&
+            !model.activeQuickPollMessage && (
+              <>
+                <p>Inbetween votes.</p>
+                <ButtonMajor onClick={() => startQuickPoll()}>
+                  QuickPoll
+                </ButtonMajor>
+                <ButtonMajor
+                  onClick={() => moveToNextRound(model.stageRoundMoniker)}
+                >
+                  Next round
+                </ButtonMajor>
+              </>
+            )}
+          {model.stage >= 0 &&
+            model.stage % 1 !== 0 &&
+            model.activeQuickPollMessage && (
+              <>
+                <p>Conducting QuickPoll.</p>
+                {stageResults ? (
+                  <p>
+                    Received{" "}
+                    <strong>{stageResults.countBallotsReceived}</strong>{" "}
+                    responses of <strong>{stageResults.numUsers}</strong> (
+                    {(
+                      (stageResults.countBallotsReceived /
+                        stageResults.numUsers) *
+                      100
+                    ).toFixed(1)}
+                    %).
+                  </p>
+                ) : (
+                  <p>Loading results...</p>
+                )}
+                <ButtonMajor onClick={() => closeQuickPoll()}>
+                  Close poll
+                </ButtonMajor>
+              </>
+            )}
         </>
       )}
     </Copy>
