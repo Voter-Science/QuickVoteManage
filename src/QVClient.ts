@@ -18,27 +18,25 @@ export interface IFilterMetadata {
 
 // Describes reports that are available for download.
 // These can contstruct hyperlinks.
-export interface IReportMetadata 
-{
-  title : string;
-  details : string;
+export interface IReportMetadata {
+  title: string;
+  details: string;
 
-  // This hyperlink will point to an endpoint that provides a CSV download. 
-  urlCsvDownload : string; // https://quickvote.... 
+  // This hyperlink will point to an endpoint that provides a CSV download.
+  urlCsvDownload: string; // https://quickvote....
 }
 
-export interface ICredentialMetadata 
-{
-  // Users in the credential list. 
-  totalUsers : number;
+export interface ICredentialMetadata {
+  // Users in the credential list.
+  totalUsers: number;
 
-  // A full url for the public invite link. 
-  publicVoteUrl : string;
+  // A full url for the public invite link.
+  publicVoteUrl: string;
 
-  urlCsvDownloadSecretLinks: string; // Url to download secret links. 
+  urlCsvDownloadSecretLinks: string; // Url to download secret links.
 }
 
-// Called from polling endpoint 
+// Called from polling endpoint
 export interface IManageResponse {
   numUsers: number;
   quickPollCountBallotsReceived: number;
@@ -95,16 +93,16 @@ export interface IQVModel extends IQVModelEdit {
   // -1 if we haven't started the election yet.
   stage: number;
 
-  // Stage and round combined. 
+  // Stage and round combined.
   stageRoundMoniker: number;
 
   policyDetails?: IPolicyDescription[];
 
   filterMetadata?: IFilterMetadata;
 
-  reportMetadata? : IReportMetadata[];
+  reportMetadata?: IReportMetadata[];
 
-  credentialMetadata? : ICredentialMetadata;
+  credentialMetadata?: ICredentialMetadata;
 }
 
 // Client for QuickVote APIs.
@@ -129,17 +127,22 @@ export class QVClient {
     return this._http.postAsync(uri, model);
   }
 
-  public PostMoveToNextRound(stageRoundMoniker : number): Promise<void> {
-    let plainUri = `/api/manage/${this._sheetId}/MoveToNextRound?round=${stageRoundMoniker}`;
+  public PostMoveToNextRound(stageRoundMoniker: number): Promise<void> {
+    let plainUri = `/api/manage/${this._sheetId}/MoveNextRound?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
 
-  public GetPollResult(stageRoundMoniker : number) : Promise<IManageResponse>
-  {
+  public GetPollResult(stageRoundMoniker: number): Promise<IManageResponse> {
     var shortId = this._sheetId.substr(3);
     let plainUri = `/election/${shortId}/ajaxmanage?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
-    return this._http.getAsync<IManageResponse>(uri);
+    return this._http.postAsync<IManageResponse>(uri, {});
+  }
+
+  public SendLinks(): Promise<void> {
+    let plainUri = `/api/manage/${this._sheetId}/sendlinks`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, {});
   }
 }
