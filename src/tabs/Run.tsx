@@ -203,7 +203,9 @@ function Run({ client, model, setModel }: IProps) {
     results.forEach((result) => {
       if (result.result !== "lose") {
         allLose = false;
-        nWinners++;
+        if (result.result === "win") {
+          nWinners++;
+        }
       }
     });
 
