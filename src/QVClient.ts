@@ -112,6 +112,8 @@ export interface ITallyResults {
 
   // Number of ballots cast. Very important for determining what's a majority.
   totalBallots: number;
+
+  round: number;
 }
 
 // Subset of fields that can be edited
@@ -198,10 +200,21 @@ export class QVClient {
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
+
   public PostCloseQuickPoll(): Promise<void> {
     var shortId = this._sheetId.substr(3);
     let plainUri = `/election/${shortId}/ajaxquickpoll/done`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
+  }
+
+  public PostSubmitResults(body: {
+    round: number;
+    results: ITallyResultsEntry[];
+  }): Promise<void> {
+    var shortId = this._sheetId.substr(3);
+    let plainUri = `/election/${shortId}/ajaxmanage/submitpartials`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, body);
   }
 }

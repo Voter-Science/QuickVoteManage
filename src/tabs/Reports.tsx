@@ -21,7 +21,7 @@ function Reports({ model }: IProps) {
       <h3>Downloading CSVs reports</h3>
       <ul>
         {model.reportMetadata?.map((entry) => (
-          <li>
+          <li key={entry.title}>
             <CSVIcon src="https://trcanvasdata.blob.core.windows.net/publicimages/export-csv.png" />{" "}
             <a href={entry.urlCsvDownload}>{entry.title}</a> &mdash;{" "}
             {entry.details}
