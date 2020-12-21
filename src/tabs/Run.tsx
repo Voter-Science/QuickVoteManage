@@ -363,10 +363,10 @@ function Run({ client, model, setModel }: IProps) {
               <p>Conducting QuickPoll: <strong>{model.activeQuickPollMessage}</strong></p>
               {stageResults ? (
                 <p>
-                  Received <strong>{stageResults.countBallotsReceived}</strong>{" "}
+                  Received <strong>{stageResults.quickPollCountBallotsReceived}</strong>{" "}
                   responses of <strong>{stageResults.numUsers}</strong> (
                   {(
-                    (stageResults.countBallotsReceived /
+                    (stageResults.quickPollCountBallotsReceived /
                       stageResults.numUsers) *
                     100
                   ).toFixed(1)}
