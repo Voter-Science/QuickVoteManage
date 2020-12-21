@@ -153,6 +153,14 @@ export interface IQVModel extends IQVModelEdit {
   credentialMetadata?: ICredentialMetadata;
 }
 
+export enum Mode {
+  Begin,
+  Stage,
+  StagePartial,
+  Inbetween,
+  InbetweenQuickpoll,
+}
+
 // Client for QuickVote APIs.
 export class QVClient {
   public _http: XC.XClient;
@@ -173,6 +181,27 @@ export class QVClient {
     let plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, model);
+  }
+
+  public GetMode(model: IQVModel): Mode {
+    console.log(model.stage)
+    if (model.stage === -1) {
+      return Mode.Begin;
+    }
+    if (model.stage >= 0 && model.stage % 1 === 0) {
+      if (!model.partialResults) {
+        return Mode.Stage;
+      } else {
+        return Mode.StagePartial;
+      }
+    }
+    if (model.stage >= 0 && model.stage % 1 !== 0) {
+      if (!model.activeQuickPollMessage) {
+        return Mode.Inbetween;
+      } else {
+        return Mode.InbetweenQuickpoll;
+      }
+    }
   }
 
   public PostMoveToNextRound(stageRoundMoniker: number): Promise<void> {

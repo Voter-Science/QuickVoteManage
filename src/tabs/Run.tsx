@@ -175,12 +175,8 @@ function Run({ client, model, setModel }: IProps) {
 
   function fetchStageResults(stageModel: QV.IQVModel) {
     if (
-      (stageModel.stageRoundMoniker > 0 &&
-        stageModel.stage % 1 === 0 &&
-        !stageModel.partialResults) ||
-      (stageModel.stageRoundMoniker > 0 &&
-        stageModel.stage % 1 !== 0 &&
-        stageModel.activeQuickPollMessage)
+      client.GetMode(stageModel) === QV.Mode.Stage ||
+      client.GetMode(stageModel) === QV.Mode.InbetweenQuickpoll
     ) {
       client
         .GetPollResult(stageModel.stageRoundMoniker)
@@ -238,6 +234,14 @@ function Run({ client, model, setModel }: IProps) {
     fetchStageResults(model);
   }, 8000);
 
+  if (model.done) {
+    return (
+      <Copy>
+        <h3>The election has been completed.</h3>
+      </Copy>
+    );
+  }
+
   return (
     <Copy>
       <h3>Run your election</h3>
@@ -245,7 +249,7 @@ function Run({ client, model, setModel }: IProps) {
         <p>Loading...</p>
       ) : (
         <>
-          {model.stage === -1 && (
+          {client.GetMode(model) === QV.Mode.Begin && (
             <>
               <p>Not yet started.</p>
               <ButtonMajor
@@ -255,138 +259,127 @@ function Run({ client, model, setModel }: IProps) {
               </ButtonMajor>
             </>
           )}
-          {model.stage >= 0 && model.stage % 1 === 0 && (
+          {client.GetMode(model) === QV.Mode.Stage && (
             <>
-              {!model.partialResults ? (
-                <>
-                  <p>
-                    Voting is open for{" "}
-                    <strong>{model.stages[model.stage].title}</strong>
-                  </p>
-                  {stageResults ? (
-                    <p>
-                      Received{" "}
-                      <strong>{stageResults.countBallotsReceived}</strong>{" "}
-                      ballots of <strong>{stageResults.numUsers}</strong> (
-                      {(
-                        (stageResults.countBallotsReceived /
-                          stageResults.numUsers) *
-                        100
-                      ).toFixed(1)}
-                      %).
-                    </p>
-                  ) : (
-                    <p>Loading results...</p>
-                  )}
-                  <ButtonMajor
-                    onClick={() => moveToNextRound(model.stageRoundMoniker)}
-                  >
-                    Close voting
-                  </ButtonMajor>
-                </>
+              <p>
+                Voting is open for{" "}
+                <strong>{model.stages[model.stage].title}</strong>
+              </p>
+              {stageResults ? (
+                <p>
+                  Received <strong>{stageResults.countBallotsReceived}</strong>{" "}
+                  ballots of <strong>{stageResults.numUsers}</strong> (
+                  {(
+                    (stageResults.countBallotsReceived /
+                      stageResults.numUsers) *
+                    100
+                  ).toFixed(1)}
+                  %).
+                </p>
               ) : (
-                <>
-                  <p>
-                    Votes are tallied, now pick up to{" "}
-                    <strong>{model.partialResults.nSlots}</strong> winners
-                    according to rules.
-                  </p>
-                  <p>If you pick less, there will be a runoff.</p>
-                  {resultsError && (
-                    <p style={{ color: "red" }}>{resultsError}</p>
-                  )}
-                  <PseudoTableHeader>
-                    <div>Name</div>
-                    <div>Votes</div>
-                    <div>Vote %</div>
-                    <div>Win</div>
-                    <div>Runoff</div>
-                    <div>Lose</div>
-                  </PseudoTableHeader>
-                  <PseudoTableBody>
-                    {results?.map((result, index) => (
-                      <PseudoTableRow key={result.name} result={result.result}>
-                        <div>{result.name}</div>
-                        <div>{result.votes}</div>
-                        <div>{result.votePercent}</div>
-                        <div>
-                          <input
-                            type="radio"
-                            name={`result-${index}`}
-                            value="win"
-                            checked={result.result === "win"}
-                            onChange={(e) => setResult(e, index)}
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="radio"
-                            name={`result-${index}`}
-                            value="draw"
-                            checked={result.result === "draw"}
-                            onChange={(e) => setResult(e, index)}
-                          />
-                        </div>
-                        <div>
-                          <input
-                            type="radio"
-                            name={`result-${index}`}
-                            value="lose"
-                            checked={result.result === "lose"}
-                            onChange={(e) => setResult(e, index)}
-                          />
-                        </div>
-                      </PseudoTableRow>
-                    ))}
-                  </PseudoTableBody>
-
-                  <ButtonMajor onClick={() => validateResults()}>
-                    Submit results
-                  </ButtonMajor>
-                </>
+                <p>Loading results...</p>
               )}
+              <ButtonMajor
+                onClick={() => moveToNextRound(model.stageRoundMoniker)}
+              >
+                Close voting
+              </ButtonMajor>
             </>
           )}
-          {model.stage >= 0 &&
-            model.stage % 1 !== 0 &&
-            !model.activeQuickPollMessage && (
-              <>
-                <p>Inbetween votes.</p>
-                <ButtonMajor onClick={() => startQuickPoll()}>
-                  QuickPoll
-                </ButtonMajor>
-                <ButtonMajor
-                  onClick={() => moveToNextRound(model.stageRoundMoniker)}
-                >
-                  Next round
-                </ButtonMajor>
-              </>
-            )}
-          {model.stage >= 0 &&
-            model.stage % 1 !== 0 &&
-            model.activeQuickPollMessage && (
-              <>
-                <p>Conducting QuickPoll.</p>
-                {stageResults ? (
-                  <p>
-                    Received{" "}
-                    <strong>{stageResults.countBallotsReceived}</strong>{" "}
-                    responses of <strong>{stageResults.numUsers}</strong> (
-                    {(
-                      (stageResults.countBallotsReceived /
-                        stageResults.numUsers) *
-                      100
-                    ).toFixed(1)}
-                    %).
-                  </p>
-                ) : (
-                  <p>Loading results...</p>
-                )}
-                <ButtonMajor onClick={() => closeQuickPoll()}>
-                  Close poll
-                </ButtonMajor>
-              </>
-            )}
+          {client.GetMode(model) === QV.Mode.StagePartial && (
+            <>
+              <p>
+                Votes are tallied, now pick up to{" "}
+                <strong>{model.partialResults.nSlots}</strong> winners according
+                to rules.
+              </p>
+              <p>If you pick less, there will be a runoff.</p>
+              {resultsError && <p style={{ color: "red" }}>{resultsError}</p>}
+              <PseudoTableHeader>
+                <div>Name</div>
+                <div>Votes</div>
+                <div>Vote %</div>
+                <div>Win</div>
+                <div>Runoff</div>
+                <div>Lose</div>
+              </PseudoTableHeader>
+              <PseudoTableBody>
+                {results?.map((result, index) => (
+                  <PseudoTableRow key={result.name} result={result.result}>
+                    <div>{result.name}</div>
+                    <div>{result.votes}</div>
+                    <div>{result.votePercent}</div>
+                    <div>
+                      <input
+                        type="radio"
+                        name={`result-${index}`}
+                        value="win"
+                        checked={result.result === "win"}
+                        onChange={(e) => setResult(e, index)}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        name={`result-${index}`}
+                        value="draw"
+                        checked={result.result === "draw"}
+                        onChange={(e) => setResult(e, index)}
+                      />
+                    </div>
+                    <div>
+                      <input
+                        type="radio"
+                        name={`result-${index}`}
+                        value="lose"
+                        checked={result.result === "lose"}
+                        onChange={(e) => setResult(e, index)}
+                      />
+                    </div>
+                  </PseudoTableRow>
+                ))}
+              </PseudoTableBody>
+
+              <ButtonMajor onClick={() => validateResults()}>
+                Submit results
+              </ButtonMajor>
+            </>
+          )}
+          {client.GetMode(model) === QV.Mode.Inbetween && (
+            <>
+              <p>Inbetween votes.</p>
+              <ButtonMajor onClick={() => startQuickPoll()}>
+                QuickPoll
+              </ButtonMajor>
+              <ButtonMajor
+                onClick={() => moveToNextRound(model.stageRoundMoniker)}
+              >
+                Next round
+              </ButtonMajor>
+            </>
+          )}
+          {client.GetMode(model) === QV.Mode.InbetweenQuickpoll && (
+            <>
+              <p>Conducting QuickPoll.</p>
+              {stageResults ? (
+                <p>
+                  Received <strong>{stageResults.countBallotsReceived}</strong>{" "}
+                  responses of <strong>{stageResults.numUsers}</strong> (
+                  {(
+                    (stageResults.countBallotsReceived /
+                      stageResults.numUsers) *
+                    100
+                  ).toFixed(1)}
+                  %).
+                </p>
+              ) : (
+                <p>Loading results...</p>
+              )}
+              <ButtonMajor onClick={() => closeQuickPoll()}>
+                Close poll
+              </ButtonMajor>
+            </>
+          )}
         </>
       )}
     </Copy>
