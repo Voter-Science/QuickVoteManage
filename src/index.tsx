@@ -13,7 +13,6 @@ import { PluginShell } from "trc-react/dist/PluginShell";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
-import { Grid } from "trc-react/dist/common/Grid";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
 import Invites from "./tabs/Invites";
@@ -853,30 +852,18 @@ export class App extends React.Component<IProps, IState> {
                 selected={new Date(this.state.Model.targetDate)}
                 onChange={this.handlePageDateChange}
               />
-              <Grid>
-                <div>
-                  {this.state.Model.stage === -1 && (
-                    <p>
-                      <i>Election is not yet open</i>
-                    </p>
-                  )}
-                  {this.state.Model.done && (
-                    <p>
-                      Election is <strong>done</strong>.
-                    </p>
-                  )}
-                </div>
-                <LegacyUrl
-                  href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
-                    "el_",
-                    ""
-                  )}/manage`}
-                  target="_blank"
-                  style={{ textAlign: "right" }}
-                >
-                  Open in legacy plugin
-                </LegacyUrl>
-              </Grid>
+              <div>
+                {this.state.Model.stage === -1 && (
+                  <p>
+                    <i>Election is not yet open</i>
+                  </p>
+                )}
+                {this.state.Model.done && (
+                  <p>
+                    Election is <strong>done</strong>.
+                  </p>
+                )}
+              </div>
             </Copy>
 
             <Copy>
