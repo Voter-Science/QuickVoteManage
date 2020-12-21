@@ -360,7 +360,7 @@ function Run({ client, model, setModel }: IProps) {
           )}
           {client.GetMode(model) === QV.Mode.InbetweenQuickpoll && (
             <>
-              <p>Conducting QuickPoll.</p>
+              <p>Conducting QuickPoll: <strong>{model.activeQuickPollMessage}</strong></p>
               {stageResults ? (
                 <p>
                   Received <strong>{stageResults.countBallotsReceived}</strong>{" "}
