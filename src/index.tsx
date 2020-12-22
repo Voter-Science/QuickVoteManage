@@ -852,18 +852,16 @@ export class App extends React.Component<IProps, IState> {
                 selected={new Date(this.state.Model.targetDate)}
                 onChange={this.handlePageDateChange}
               />
-              <div>
-                {this.state.Model.stage === -1 && (
-                  <p>
-                    <i>Election is not yet open</i>
-                  </p>
-                )}
-                {this.state.Model.done && (
-                  <p>
-                    Election is <strong>done</strong>.
-                  </p>
-                )}
-              </div>
+              {this.qvClient.GetMode(this.state.Model) === QV.Mode.Begin && (
+                <p>
+                  <i>Election is not yet open</i>
+                </p>
+              )}
+              {this.state.Model.done && (
+                <p>
+                  Election is <strong>done</strong>.
+                </p>
+              )}
             </Copy>
 
             <Copy>
