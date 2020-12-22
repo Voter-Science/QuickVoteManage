@@ -7,6 +7,8 @@ import { Copy } from "trc-react/dist/common/Copy";
 import * as QV from "../QVClient";
 import useInterval from "../useInterval";
 
+import Agenda from "./Agenda";
+
 const ButtonMajor = styled.button<{ secondary?: boolean }>`
   border: none;
   border-radius: 2px;
@@ -118,12 +120,14 @@ interface ITallyResultsEntryWithState extends QV.ITallyResultsEntry {
 }
 
 interface IProps {
+  authToken: string;
+  sheetId: string;
   client: QV.QVClient;
   model: QV.IQVModel;
   setModel(model: QV.IQVModel, callback: any): void;
 }
 
-function Run({ client, model, setModel }: IProps) {
+function Run({ authToken, sheetId, client, model, setModel }: IProps) {
   const [loading, setLoading] = React.useState(false);
   const [stageResults, setStageResults] = React.useState<QV.IManageResponse>(
     null
@@ -256,157 +260,170 @@ function Run({ client, model, setModel }: IProps) {
   }
 
   return (
-    <Copy>
-      <h3>Run your election</h3>
-      {loading ? (
-        <p>Loading...</p>
-      ) : (
-        <>
-          {client.GetMode(model) === QV.Mode.Begin && (
-            <>
-              <p>Not yet started.</p>
-              <ButtonMajor
-                onClick={() => moveToNextRound(model.stageRoundMoniker)}
-              >
-                Begin
-              </ButtonMajor>
-            </>
-          )}
-          {client.GetMode(model) === QV.Mode.Stage && (
-            <>
-              <p>
-                Voting is open for{" "}
-                <strong>{model.stages[model.stage].title}</strong> (Round{" "}
-                {model.stageRoundMoniker % 100})
-              </p>
-              {stageResults ? (
+    <>
+      <Copy>
+        <h3>Run your election</h3>
+        {loading ? (
+          <p>Loading...</p>
+        ) : (
+          <>
+            {client.GetMode(model) === QV.Mode.Begin && (
+              <>
+                <p>Not yet started.</p>
+                <ButtonMajor
+                  onClick={() => moveToNextRound(model.stageRoundMoniker)}
+                >
+                  Begin
+                </ButtonMajor>
+              </>
+            )}
+            {client.GetMode(model) === QV.Mode.Stage && (
+              <>
                 <p>
-                  Received <strong>{stageResults.countBallotsReceived}</strong>{" "}
-                  ballots of <strong>{stageResults.numUsers}</strong> (
-                  {(
-                    (stageResults.countBallotsReceived /
-                      stageResults.numUsers) *
-                    100
-                  ).toFixed(1)}
-                  %).
+                  Voting is open for{" "}
+                  <strong>{model.stages[model.stage].title}</strong> (Round{" "}
+                  {model.stageRoundMoniker % 100})
                 </p>
-              ) : (
-                <p>Loading results...</p>
-              )}
-              <ButtonMajor
-                onClick={() => moveToNextRound(model.stageRoundMoniker)}
-              >
-                Close voting
-              </ButtonMajor>
-            </>
-          )}
-          {client.GetMode(model) === QV.Mode.StagePartial && (
-            <>
-              <p>
-                Votes are tallied, now pick up to{" "}
-                <strong>{model.partialResults.nSlots}</strong> winners according
-                to rules.
-              </p>
-              <p>If you pick less, there will be a runoff.</p>
-              {resultsError && <p style={{ color: "red" }}>{resultsError}</p>}
-              <PseudoTableHeader>
-                <div>Name</div>
-                <div>Votes</div>
-                <div>Vote %</div>
-                <div>Win</div>
-                <div>Runoff</div>
-                <div>Lose</div>
-              </PseudoTableHeader>
-              <PseudoTableBody>
-                {results?.map((result, index) => (
-                  <PseudoTableRow key={result.name} result={result.result}>
-                    <div>{result.name}</div>
-                    <div>{result.votes}</div>
-                    <div>{result.votePercent}</div>
-                    <div>
-                      <input
-                        type="radio"
-                        name={`result-${index}`}
-                        value="win"
-                        checked={result.result === "win"}
-                        onChange={(e) => setResult(e, index)}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        name={`result-${index}`}
-                        value="draw"
-                        checked={result.result === "draw"}
-                        onChange={(e) => setResult(e, index)}
-                      />
-                    </div>
-                    <div>
-                      <input
-                        type="radio"
-                        name={`result-${index}`}
-                        value="lose"
-                        checked={result.result === "lose"}
-                        onChange={(e) => setResult(e, index)}
-                      />
-                    </div>
-                  </PseudoTableRow>
-                ))}
-              </PseudoTableBody>
+                {stageResults ? (
+                  <p>
+                    Received{" "}
+                    <strong>{stageResults.countBallotsReceived}</strong> ballots
+                    of <strong>{stageResults.numUsers}</strong> (
+                    {(
+                      (stageResults.countBallotsReceived /
+                        stageResults.numUsers) *
+                      100
+                    ).toFixed(1)}
+                    %).
+                  </p>
+                ) : (
+                  <p>Loading results...</p>
+                )}
+                <ButtonMajor
+                  onClick={() => moveToNextRound(model.stageRoundMoniker)}
+                >
+                  Close voting
+                </ButtonMajor>
+              </>
+            )}
+            {client.GetMode(model) === QV.Mode.StagePartial && (
+              <>
+                <p>
+                  Votes are tallied, now pick up to{" "}
+                  <strong>{model.partialResults.nSlots}</strong> winners
+                  according to rules.
+                </p>
+                <p>If you pick less, there will be a runoff.</p>
+                {resultsError && <p style={{ color: "red" }}>{resultsError}</p>}
+                <PseudoTableHeader>
+                  <div>Name</div>
+                  <div>Votes</div>
+                  <div>Vote %</div>
+                  <div>Win</div>
+                  <div>Runoff</div>
+                  <div>Lose</div>
+                </PseudoTableHeader>
+                <PseudoTableBody>
+                  {results?.map((result, index) => (
+                    <PseudoTableRow key={result.name} result={result.result}>
+                      <div>{result.name}</div>
+                      <div>{result.votes}</div>
+                      <div>{result.votePercent}</div>
+                      <div>
+                        <input
+                          type="radio"
+                          name={`result-${index}`}
+                          value="win"
+                          checked={result.result === "win"}
+                          onChange={(e) => setResult(e, index)}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          name={`result-${index}`}
+                          value="draw"
+                          checked={result.result === "draw"}
+                          onChange={(e) => setResult(e, index)}
+                        />
+                      </div>
+                      <div>
+                        <input
+                          type="radio"
+                          name={`result-${index}`}
+                          value="lose"
+                          checked={result.result === "lose"}
+                          onChange={(e) => setResult(e, index)}
+                        />
+                      </div>
+                    </PseudoTableRow>
+                  ))}
+                </PseudoTableBody>
 
-              <ButtonMajor onClick={() => validateResults()}>
-                Submit results
-              </ButtonMajor>
-            </>
-          )}
-          {client.GetMode(model) === QV.Mode.Inbetween && (
-            <>
-              <p>Inbetween votes.</p>
-              {quickPollResults && (
+                <ButtonMajor onClick={() => validateResults()}>
+                  Submit results
+                </ButtonMajor>
+              </>
+            )}
+            {client.GetMode(model) === QV.Mode.Inbetween && (
+              <>
+                <p>Inbetween votes.</p>
+                {quickPollResults && (
+                  <p>
+                    Results for the latest QuickPoll:{" "}
+                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                  </p>
+                )}
+                <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                  QuickPoll
+                </ButtonMajor>
+                <ButtonMajor
+                  onClick={() => moveToNextRound(model.stageRoundMoniker)}
+                >
+                  Next round
+                </ButtonMajor>
+              </>
+            )}
+            {client.GetMode(model) === QV.Mode.InbetweenQuickpoll && (
+              <>
                 <p>
-                  Results for the latest QuickPoll:{" "}
-                  <QuickPollResults>${quickPollResults}</QuickPollResults>
+                  Conducting QuickPoll:{" "}
+                  <strong>{model.activeQuickPollMessage}</strong>
                 </p>
-              )}
-              <ButtonMajor onClick={() => startQuickPoll()} secondary>
-                QuickPoll
-              </ButtonMajor>
-              <ButtonMajor
-                onClick={() => moveToNextRound(model.stageRoundMoniker)}
-              >
-                Next round
-              </ButtonMajor>
-            </>
-          )}
-          {client.GetMode(model) === QV.Mode.InbetweenQuickpoll && (
-            <>
-              <p>
-                Conducting QuickPoll:{" "}
-                <strong>{model.activeQuickPollMessage}</strong>
-              </p>
-              {stageResults ? (
-                <p>
-                  Received{" "}
-                  <strong>{stageResults.quickPollCountBallotsReceived}</strong>{" "}
-                  responses of <strong>{stageResults.numUsers}</strong> (
-                  {(
-                    (stageResults.quickPollCountBallotsReceived /
-                      stageResults.numUsers) *
-                    100
-                  ).toFixed(1)}
-                  %).
-                </p>
-              ) : (
-                <p>Loading results...</p>
-              )}
-              <ButtonMajor onClick={() => closeQuickPoll()}>
-                Close poll
-              </ButtonMajor>
-            </>
-          )}
-        </>
-      )}
-    </Copy>
+                {stageResults ? (
+                  <p>
+                    Received{" "}
+                    <strong>
+                      {stageResults.quickPollCountBallotsReceived}
+                    </strong>{" "}
+                    responses of <strong>{stageResults.numUsers}</strong> (
+                    {(
+                      (stageResults.quickPollCountBallotsReceived /
+                        stageResults.numUsers) *
+                      100
+                    ).toFixed(1)}
+                    %).
+                  </p>
+                ) : (
+                  <p>Loading results...</p>
+                )}
+                <ButtonMajor onClick={() => closeQuickPoll()}>
+                  Close poll
+                </ButtonMajor>
+              </>
+            )}
+          </>
+        )}
+      </Copy>
+      <Agenda
+        authToken={authToken}
+        sheetId={sheetId}
+        model={model}
+        client={client}
+        setModel={() => {}}
+        readonly
+      />
+    </>
   );
 }
 

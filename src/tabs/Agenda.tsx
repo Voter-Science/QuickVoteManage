@@ -21,6 +21,7 @@ interface IProps {
   client: QV.QVClient;
   model: QV.IQVModel;
   setModel(model: QV.IQVModel): void;
+  readonly?: boolean;
 }
 
 interface IState {
@@ -45,7 +46,7 @@ function arrayMove(arr: any[], oldIndex: number, newIndex: number) {
 
 const SLATE_BASE_URL = "https://petitionbuilder.org/slate/";
 
-const PseudoTableHeader = styled.div<{ saving: boolean }>`
+const PseudoTableHeader = styled.div<{ saving: boolean; readonly: boolean }>`
   border-top: solid 1px gray;
   border-bottom: solid 1px gray;
   padding: 0.6rem 0;
@@ -78,9 +79,14 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
       opacity: 0.4;
       pointer-events: none;
     `}
+  ${(props) =>
+    props.readonly &&
+    css`
+      margin-top: 6rem;
+    `}
 `;
 
-const PseudoTableBody = styled.ul<{ saving: boolean }>`
+const PseudoTableBody = styled.ul<{ saving: boolean; readonly: boolean }>`
   margin: 0 -2rem 1.5rem -2rem;
   padding: 0;
   list-style-type: none;
@@ -89,6 +95,11 @@ const PseudoTableBody = styled.ul<{ saving: boolean }>`
     props.saving &&
     css`
       opacity: 0.4;
+      pointer-events: none;
+    `}
+  ${(props) =>
+    props.readonly &&
+    css`
       pointer-events: none;
     `}
 `;
@@ -521,7 +532,10 @@ export class Agenda extends React.Component<IProps, IState> {
 
   private SortableList = SortableContainer(() => {
     return (
-      <PseudoTableBody saving={this.state.saving}>
+      <PseudoTableBody
+        saving={this.state.saving}
+        readonly={this.props.readonly}
+      >
         {this.props.model.stages.map((stage: any, index: number) => {
           return (
             <this.SortableItem
@@ -556,7 +570,9 @@ export class Agenda extends React.Component<IProps, IState> {
         readonly={indx < this.props.model.stage}
       >
         <div>
-          <i className="material-icons">drag_indicator</i>
+          {!this.props.readonly && (
+            <i className="material-icons">drag_indicator</i>
+          )}
         </div>
         <div>
           <EditableOption
@@ -789,36 +805,44 @@ export class Agenda extends React.Component<IProps, IState> {
   render() {
     return (
       <>
-        <Copy>
-          <EditableTitle
-            value={this.props.model.title}
-            type="text"
-            onChange={this.handlePageTitleChange}
-          />{" "}
-          on{" "}
-          <DatePicker
-            selected={new Date(this.props.model.targetDate)}
-            onChange={this.handlePageDateChange}
-          />
-          {this.props.client.GetMode(this.props.model) === QV.Mode.Begin && (
-            <p>
-              <i>Election is not yet open</i>
-            </p>
-          )}
-          {this.props.model.done && (
-            <p>
-              Election is <strong>done</strong>.
-            </p>
-          )}
-        </Copy>
+        {!this.props.readonly && (
+          <>
+            <Copy>
+              <EditableTitle
+                value={this.props.model.title}
+                type="text"
+                onChange={this.handlePageTitleChange}
+              />{" "}
+              on{" "}
+              <DatePicker
+                selected={new Date(this.props.model.targetDate)}
+                onChange={this.handlePageDateChange}
+              />
+              {this.props.client.GetMode(this.props.model) ===
+                QV.Mode.Begin && (
+                <p>
+                  <i>Election is not yet open</i>
+                </p>
+              )}
+              {this.props.model.done && (
+                <p>
+                  Election is <strong>done</strong>.
+                </p>
+              )}
+            </Copy>
 
-        <Copy>
-          <h4 style={{ marginTop: `2rem` }}>Stages:</h4>
-        </Copy>
+            <Copy>
+              <h4 style={{ marginTop: `2rem` }}>Stages:</h4>
+            </Copy>
+          </>
+        )}
 
         <ReactTooltip />
 
-        <PseudoTableHeader saving={this.state.saving}>
+        <PseudoTableHeader
+          saving={this.state.saving}
+          readonly={this.props.readonly}
+        >
           <div />
           <div>
             Policy{" "}
@@ -880,31 +904,35 @@ export class Agenda extends React.Component<IProps, IState> {
           axis="y"
         />
 
-        <ToastContainer />
+        {!this.props.readonly && (
+          <>
+            <ToastContainer />
 
-        <HorizontalList alignRight>
-          <Button onClick={this.addStage} disabled={this.state.saving}>
-            Add stage
-          </Button>
-          <Button
-            disabled={this.state.saving || !this.state.isDirty}
-            onClick={async () => {
-              this.setState({ saving: true });
-              this.save()
-                .then(() => {
-                  toast.success("Model updated successfully.");
-                  this.setState({ saving: false, isDirty: false });
-                })
-                .catch((err) => {
-                  alert("Error: " + err.Message);
-                  toast.error("An error has occured, please try again.");
-                  this.setState({ saving: false });
-                });
-            }}
-          >
-            Save
-          </Button>
-        </HorizontalList>
+            <HorizontalList alignRight>
+              <Button onClick={this.addStage} disabled={this.state.saving}>
+                Add stage
+              </Button>
+              <Button
+                disabled={this.state.saving || !this.state.isDirty}
+                onClick={async () => {
+                  this.setState({ saving: true });
+                  this.save()
+                    .then(() => {
+                      toast.success("Model updated successfully.");
+                      this.setState({ saving: false, isDirty: false });
+                    })
+                    .catch((err) => {
+                      alert("Error: " + err.Message);
+                      toast.error("An error has occured, please try again.");
+                      this.setState({ saving: false });
+                    });
+                }}
+              >
+                Save
+              </Button>
+            </HorizontalList>
+          </>
+        )}
       </>
     );
   }

@@ -108,6 +108,8 @@ export class App extends React.Component<IProps, IState> {
           </>
           <>
             <Run
+              authToken={this.props.authToken}
+              sheetId={this.props.sheetId}
               model={this.state.Model}
               client={this.qvClient}
               setModel={(model: QV.IQVModel, callback: any) =>
