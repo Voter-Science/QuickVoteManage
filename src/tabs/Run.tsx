@@ -276,7 +276,8 @@ function Run({ client, model, setModel }: IProps) {
             <>
               <p>
                 Voting is open for{" "}
-                <strong>{model.stages[model.stage].title}</strong>
+                <strong>{model.stages[model.stage].title}</strong> (Round{" "}
+                {model.stageRoundMoniker % 100})
               </p>
               {stageResults ? (
                 <p>
