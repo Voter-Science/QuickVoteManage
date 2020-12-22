@@ -104,6 +104,10 @@ const PseudoTableRow = styled.li<{ result: string }>`
     `}
 `;
 
+const QuickPollResults = styled.code`
+  background: #ddd;
+`;
+
 interface ITallyResultsEntryWithState extends QV.ITallyResultsEntry {
   result: string;
 }
@@ -119,11 +123,11 @@ function Run({ client, model, setModel }: IProps) {
   const [stageResults, setStageResults] = React.useState<QV.IManageResponse>(
     null
   );
-
   const [results, setResults] = React.useState<ITallyResultsEntryWithState[]>(
     null
   );
   const [resultsError, setResultsError] = React.useState("");
+  const [quickPollResults, setQuickPollResults] = React.useState("");
 
   React.useEffect(() => {
     const resultsWithState: ITallyResultsEntryWithState[] = model.partialResults?.results2?.map(
@@ -139,6 +143,7 @@ function Run({ client, model, setModel }: IProps) {
   function moveToNextRound(stageRoundMoniker: number) {
     setLoading(true);
     setStageResults(null);
+    setQuickPollResults("");
     client.PostMoveToNextRound(stageRoundMoniker).then(() => {
       client.GetModel().then((data) => {
         setModel(data, fetchStageResults);
@@ -153,6 +158,7 @@ function Run({ client, model, setModel }: IProps) {
     if (message) {
       setLoading(true);
       setStageResults(null);
+      setQuickPollResults("");
       client.PostStartQuickPoll(message).then(() => {
         client.GetModel().then((data) => {
           setModel(data, fetchStageResults);
@@ -165,7 +171,9 @@ function Run({ client, model, setModel }: IProps) {
   function closeQuickPoll() {
     setLoading(true);
     setStageResults(null);
-    client.PostCloseQuickPoll().then(() => {
+    setQuickPollResults("");
+    client.PostCloseQuickPoll().then((data) => {
+      setQuickPollResults(data.resultsStr);
       client.GetModel().then((data) => {
         setModel(data, fetchStageResults);
         setLoading(false);
@@ -348,6 +356,12 @@ function Run({ client, model, setModel }: IProps) {
           {client.GetMode(model) === QV.Mode.Inbetween && (
             <>
               <p>Inbetween votes.</p>
+              {quickPollResults && (
+                <p>
+                  Results for the latest QuickPoll:{" "}
+                  <QuickPollResults>${quickPollResults}</QuickPollResults>
+                </p>
+              )}
               <ButtonMajor onClick={() => startQuickPoll()}>
                 QuickPoll
               </ButtonMajor>
@@ -360,10 +374,14 @@ function Run({ client, model, setModel }: IProps) {
           )}
           {client.GetMode(model) === QV.Mode.InbetweenQuickpoll && (
             <>
-              <p>Conducting QuickPoll: <strong>{model.activeQuickPollMessage}</strong></p>
+              <p>
+                Conducting QuickPoll:{" "}
+                <strong>{model.activeQuickPollMessage}</strong>
+              </p>
               {stageResults ? (
                 <p>
-                  Received <strong>{stageResults.quickPollCountBallotsReceived}</strong>{" "}
+                  Received{" "}
+                  <strong>{stageResults.quickPollCountBallotsReceived}</strong>{" "}
                   responses of <strong>{stageResults.numUsers}</strong> (
                   {(
                     (stageResults.quickPollCountBallotsReceived /

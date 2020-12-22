@@ -232,7 +232,7 @@ export class QVClient {
     return this._http.postAsync(uri, {});
   }
 
-  public PostCloseQuickPoll(): Promise<void> {
+  public PostCloseQuickPoll(): Promise<{ resultsStr: string }> {
     const plainUri = `/election/${this.GetShortId()}/ajaxquickpoll/done`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
