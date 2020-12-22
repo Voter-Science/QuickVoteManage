@@ -7,7 +7,7 @@ import { Copy } from "trc-react/dist/common/Copy";
 import * as QV from "../QVClient";
 import useInterval from "../useInterval";
 
-const ButtonMajor = styled.button`
+const ButtonMajor = styled.button<{ secondary?: boolean }>`
   border: none;
   border-radius: 2px;
   background-color: #4caf50;
@@ -17,6 +17,11 @@ const ButtonMajor = styled.button`
   font-weight: 700;
   display: block;
   margin-bottom: 1rem;
+  ${(props) =>
+    props.secondary &&
+    css`
+      background-color: #bbb;
+    `}
 `;
 
 const PseudoTableHeader = styled.div`
@@ -362,7 +367,7 @@ function Run({ client, model, setModel }: IProps) {
                   <QuickPollResults>${quickPollResults}</QuickPollResults>
                 </p>
               )}
-              <ButtonMajor onClick={() => startQuickPoll()}>
+              <ButtonMajor onClick={() => startQuickPoll()} secondary>
                 QuickPoll
               </ButtonMajor>
               <ButtonMajor
