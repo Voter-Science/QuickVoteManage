@@ -188,7 +188,6 @@ export class QVClient {
   }
 
   public GetMode(model: IQVModel): Mode {
-    console.log(model.stage)
     if (model.stage === -1) {
       return Mode.Begin;
     }
