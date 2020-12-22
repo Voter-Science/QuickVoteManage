@@ -329,7 +329,8 @@ export class Agenda extends React.Component<IProps, IState> {
       sourceAlternates: false,
     });
     modelCopy.stages = stagesCopy;
-    this.setState({ Model: modelCopy });
+    this.props.setModel(modelCopy);
+    this.setState({ isDirty: true });
   }
 
   private removeStage(index: number) {
