@@ -171,14 +171,18 @@ export class QVClient {
     this._sheetId = sheetId;
   }
 
+  private GetShortId(): string {
+    return this._sheetId.substr(3);
+  }
+
   public GetModel(): Promise<IQVModel> {
-    let plainUri = `/api/manage/${this._sheetId}`;
+    const plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.getAsync(uri);
   }
 
   public PostModel(model: IQVModel): Promise<void> {
-    let plainUri = `/api/manage/${this._sheetId}`;
+    const plainUri = `/api/manage/${this._sheetId}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, model);
   }
@@ -205,34 +209,31 @@ export class QVClient {
   }
 
   public PostMoveToNextRound(stageRoundMoniker: number): Promise<void> {
-    let plainUri = `/api/manage/${this._sheetId}/MoveNextRound?round=${stageRoundMoniker}`;
+    const plainUri = `/api/manage/${this._sheetId}/MoveNextRound?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
 
   public GetPollResult(stageRoundMoniker: number): Promise<IManageResponse> {
-    var shortId = this._sheetId.substr(3);
-    let plainUri = `/election/${shortId}/ajaxmanage?round=${stageRoundMoniker}`;
+    const plainUri = `/election/${this.GetShortId()}/ajaxmanage?round=${stageRoundMoniker}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync<IManageResponse>(uri, {});
   }
 
   public SendLinks(): Promise<void> {
-    let plainUri = `/api/manage/${this._sheetId}/sendlinks`;
+    const plainUri = `/api/manage/${this._sheetId}/sendlinks`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
 
   public PostStartQuickPoll(message: string): Promise<void> {
-    var shortId = this._sheetId.substr(3);
-    let plainUri = `/election/${shortId}/ajaxquickpoll?msg=${message}`;
+    const plainUri = `/election/${this.GetShortId()}/ajaxquickpoll?msg=${message}`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
 
   public PostCloseQuickPoll(): Promise<void> {
-    var shortId = this._sheetId.substr(3);
-    let plainUri = `/election/${shortId}/ajaxquickpoll/done`;
+    const plainUri = `/election/${this.GetShortId()}/ajaxquickpoll/done`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
   }
@@ -241,8 +242,7 @@ export class QVClient {
     round: number;
     results: ITallyResultsEntry[];
   }): Promise<void> {
-    var shortId = this._sheetId.substr(3);
-    let plainUri = `/election/${shortId}/ajaxmanage/submitpartials`;
+    const plainUri = `/election/${this.GetShortId()}/ajaxmanage/submitpartials`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, body);
   }
