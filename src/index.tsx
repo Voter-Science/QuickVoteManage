@@ -26,6 +26,17 @@ interface IProps {
   model: QV.IQVModel;
 }
 
+const PageTitle = styled.h1`
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 26px;
+`;
+
+const PageDate = styled.p`
+  text-align: center;
+  font-style: italic;
+`;
+
 const LegacyUrl = styled.a`
   display: block;
   color: #6485ff;
@@ -66,6 +77,10 @@ export class App extends React.Component<IProps, IState> {
         description="A plugin for managing elections."
         title="QuickVote-Manage"
       >
+        <PageTitle>{this.state.Model.title}</PageTitle>
+        <PageDate>
+          on {new Date(this.props.model.targetDate).toLocaleDateString()}
+        </PageDate>
         <TabsPanel
           initialTab={
             new URLSearchParams(window.location.search).get("tab") ||

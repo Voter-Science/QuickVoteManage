@@ -19,6 +19,7 @@ function Reports({ model }: IProps) {
   return (
     <Copy>
       <h3>Downloading CSVs reports</h3>
+      <p>Here are reports for after your election is complete.</p>
       <ul>
         {model.reportMetadata?.map((entry) => (
           <li key={entry.title}>

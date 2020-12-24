@@ -30,6 +30,9 @@ export interface ICredentialMetadata {
   // Users in the credential list.
   totalUsers: number;
 
+  // Users that have logged in.
+  countEverLoggedIn: number;
+
   // A full url for the public invite link.
   publicVoteUrl: string;
 
