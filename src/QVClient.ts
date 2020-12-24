@@ -189,6 +189,9 @@ export class QVClient {
 
   public GetMode(model: IQVModel): Mode {
     if (model.stage === -1) {
+      if (model.activeQuickPollMessage) {
+        return Mode.InbetweenQuickpoll;
+      }
       return Mode.Begin;
     }
     if (model.stage >= 0 && model.stage % 1 === 0) {

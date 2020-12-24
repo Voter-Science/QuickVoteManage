@@ -270,6 +270,15 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
             {client.GetMode(model) === QV.Mode.Begin && (
               <>
                 <p>Not yet started.</p>
+                {quickPollResults && (
+                  <p>
+                    Results for the latest QuickPoll:{" "}
+                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                  </p>
+                )}
+                <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                  QuickPoll
+                </ButtonMajor>
                 <ButtonMajor
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
