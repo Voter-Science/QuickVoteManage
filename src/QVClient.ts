@@ -251,4 +251,10 @@ export class QVClient {
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, body);
   }
+
+  public PostResetElection(): Promise<any> {
+    const plainUri = `/api/manage/${this._sheetId}/reset`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, {});
+  }
 }

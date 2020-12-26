@@ -135,7 +135,11 @@ export class App extends React.Component<IProps, IState> {
             />
           </>
           <>
-            <Reports model={this.state.Model} />
+            <Reports
+              client={this.qvClient}
+              model={this.state.Model}
+              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+            />
           </>
         </TabsPanel>
       </PluginShell>
