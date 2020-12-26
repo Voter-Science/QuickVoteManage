@@ -47,7 +47,13 @@ function Invites({ client, model }: IProps) {
   }
 
   function calculateLoggedInPercentage(): number {
-    return Number(((0 / model.credentialMetadata.totalUsers) * 100).toFixed(1));
+    return Number(
+      (
+        (model.credentialMetadata.countEverLoggedIn /
+          model.credentialMetadata.totalUsers) *
+        100
+      ).toFixed(1)
+    );
   }
 
   return (
