@@ -147,6 +147,17 @@ export interface IQVModel extends IQVModelEdit {
   // Stage and round combined.
   stageRoundMoniker: number;
 
+  stageResults: {
+    winners: {
+      name: string;
+      displayOrder: number;
+      winner: boolean;
+      roundDecided: number;
+      votesReceived: number;
+      votesCast: number;
+    }[];
+  }[];
+
   policyDetails?: IPolicyDescription[];
 
   filterMetadata?: IFilterMetadata;
@@ -174,7 +185,7 @@ export class QVClient {
     this._sheetId = sheetId;
   }
 
-  private GetShortId(): string {
+  public GetShortId(): string {
     return this._sheetId.substr(3);
   }
 

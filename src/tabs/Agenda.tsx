@@ -106,6 +106,7 @@ const PseudoTableRow = styled.li<{
   midstage: boolean;
 }>`
   display: flex;
+  flex-wrap: wrap;
   padding: 0.8rem 0;
   border-bottom: solid 1px #d8d8d8;
   line-height: 1.35;
@@ -264,6 +265,21 @@ const SlateError = styled.p`
   color: red;
   margin: 8px 0 0 0;
   font-size: 11px;
+`;
+
+const Winners = styled.div`
+  flex-basis: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  > span {
+    font-weight: 700;
+  }
+  > span:after {
+    content: ", ";
+  }
+  > span:last-child:after {
+    content: "";
+  }
 `;
 
 export class Agenda extends React.Component<IProps, IState> {
@@ -770,6 +786,17 @@ export class Agenda extends React.Component<IProps, IState> {
             </i>
           </RemoveStage>
         )}
+        {this.props.model.stageResults[indx] && (
+          <Winners>
+            {this.props.model.stageResults[indx].winners.length > 1
+              ? "Winners"
+              : "Winner"}
+            :{" "}
+            {this.props.model.stageResults[indx].winners.map((winner) => (
+              <span>{winner.name}</span>
+            ))}
+          </Winners>
+        )}
       </PseudoTableRow>
     );
   });
@@ -910,7 +937,10 @@ export class Agenda extends React.Component<IProps, IState> {
             <ToastContainer />
 
             <HorizontalList alignRight>
-              <Button onClick={this.addStage} disabled={this.state.saving}>
+              <Button
+                onClick={this.addStage}
+                disabled={this.state.saving || this.props.model.done}
+              >
                 Add stage
               </Button>
               <Button

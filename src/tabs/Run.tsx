@@ -310,7 +310,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 {quickPollResults && (
                   <p>
                     Results for the latest QuickPoll:{" "}
-                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                    <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
                 <ButtonMajor onClick={() => startQuickPoll()} secondary>
@@ -416,7 +416,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 {quickPollResults && (
                   <p>
                     Results for the latest QuickPoll:{" "}
-                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                    <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
                 <HorizontalList>
