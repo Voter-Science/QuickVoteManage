@@ -30,6 +30,9 @@ export interface ICredentialMetadata {
   // Users in the credential list.
   totalUsers: number;
 
+  // Users that have logged in.
+  countEverLoggedIn: number;
+
   // A full url for the public invite link.
   publicVoteUrl: string;
 
@@ -144,6 +147,17 @@ export interface IQVModel extends IQVModelEdit {
   // Stage and round combined.
   stageRoundMoniker: number;
 
+  stageResults: {
+    winners: {
+      name: string;
+      displayOrder: number;
+      winner: boolean;
+      roundDecided: number;
+      votesReceived: number;
+      votesCast: number;
+    }[];
+  }[];
+
   policyDetails?: IPolicyDescription[];
 
   filterMetadata?: IFilterMetadata;
@@ -171,7 +185,7 @@ export class QVClient {
     this._sheetId = sheetId;
   }
 
-  private GetShortId(): string {
+  public GetShortId(): string {
     return this._sheetId.substr(3);
   }
 
@@ -247,5 +261,11 @@ export class QVClient {
     const plainUri = `/election/${this.GetShortId()}/ajaxmanage/submitpartials`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, body);
+  }
+
+  public PostResetElection(): Promise<any> {
+    const plainUri = `/api/manage/${this._sheetId}/reset`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, {});
   }
 }

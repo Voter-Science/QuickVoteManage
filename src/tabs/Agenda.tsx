@@ -10,6 +10,7 @@ import * as XC from "trc-httpshim/xclient";
 
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
+import { Grid } from "trc-react/dist/common/Grid";
 import { Button } from "trc-react/dist/common/Button";
 
 import * as QV from "../QVClient";
@@ -46,7 +47,7 @@ function arrayMove(arr: any[], oldIndex: number, newIndex: number) {
 
 const SLATE_BASE_URL = "https://petitionbuilder.org/slate/";
 
-const PseudoTableHeader = styled.div<{ saving: boolean; readonly: boolean }>`
+const PseudoTableHeader = styled.div<{ saving: boolean }>`
   border-top: solid 1px gray;
   border-bottom: solid 1px gray;
   padding: 0.6rem 0;
@@ -79,11 +80,6 @@ const PseudoTableHeader = styled.div<{ saving: boolean; readonly: boolean }>`
       opacity: 0.4;
       pointer-events: none;
     `}
-  ${(props) =>
-    props.readonly &&
-    css`
-      margin-top: 6rem;
-    `}
 `;
 
 const PseudoTableBody = styled.ul<{ saving: boolean; readonly: boolean }>`
@@ -110,6 +106,7 @@ const PseudoTableRow = styled.li<{
   midstage: boolean;
 }>`
   display: flex;
+  flex-wrap: wrap;
   padding: 0.8rem 0;
   border-bottom: solid 1px #d8d8d8;
   line-height: 1.35;
@@ -172,13 +169,15 @@ const PseudoTableRow = styled.li<{
 `;
 
 const EditableTitle = styled.input`
-  border: none;
   background: none;
+  border: solid 1px rgb(118, 118, 118);
+  border-radius: 2px;
   display: block;
   width: 100%;
-  font-weight: 700;
-  font-size: 28px;
+  font-weight: 600;
+  font-size: 16px;
   margin-bottom: 8px;
+  font-style: italic;
   &:hover,
   &:focus {
     border: solid 1px #aaa;
@@ -266,6 +265,21 @@ const SlateError = styled.p`
   color: red;
   margin: 8px 0 0 0;
   font-size: 11px;
+`;
+
+const Winners = styled.div`
+  flex-basis: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  > span {
+    font-weight: 700;
+  }
+  > span:after {
+    content: ", ";
+  }
+  > span:last-child:after {
+    content: "";
+  }
 `;
 
 export class Agenda extends React.Component<IProps, IState> {
@@ -772,6 +786,17 @@ export class Agenda extends React.Component<IProps, IState> {
             </i>
           </RemoveStage>
         )}
+        {this.props.model.stageResults[indx] && (
+          <Winners>
+            {this.props.model.stageResults[indx].winners.length > 1
+              ? "Winners"
+              : "Winner"}
+            :{" "}
+            {this.props.model.stageResults[indx].winners.map((winner) => (
+              <span>{winner.name}</span>
+            ))}
+          </Winners>
+        )}
       </PseudoTableRow>
     );
   });
@@ -809,16 +834,21 @@ export class Agenda extends React.Component<IProps, IState> {
         {!this.props.readonly && (
           <>
             <Copy>
-              <EditableTitle
-                value={this.props.model.title}
-                type="text"
-                onChange={this.handlePageTitleChange}
-              />{" "}
-              on{" "}
-              <DatePicker
-                selected={new Date(this.props.model.targetDate)}
-                onChange={this.handlePageDateChange}
-              />
+              <h3>Edit the agenda and title</h3>
+              <Grid>
+                <EditableTitle
+                  value={this.props.model.title}
+                  type="text"
+                  onChange={this.handlePageTitleChange}
+                />
+                <div>
+                  on{" "}
+                  <DatePicker
+                    selected={new Date(this.props.model.targetDate)}
+                    onChange={this.handlePageDateChange}
+                  />
+                </div>
+              </Grid>
               {this.props.client.GetMode(this.props.model) ===
                 QV.Mode.Begin && (
                 <p>
@@ -840,10 +870,7 @@ export class Agenda extends React.Component<IProps, IState> {
 
         <ReactTooltip />
 
-        <PseudoTableHeader
-          saving={this.state.saving}
-          readonly={this.props.readonly}
-        >
+        <PseudoTableHeader saving={this.state.saving}>
           <div />
           <div>
             Policy{" "}
@@ -910,7 +937,10 @@ export class Agenda extends React.Component<IProps, IState> {
             <ToastContainer />
 
             <HorizontalList alignRight>
-              <Button onClick={this.addStage} disabled={this.state.saving}>
+              <Button
+                onClick={this.addStage}
+                disabled={this.state.saving || this.props.model.done}
+              >
                 Add stage
               </Button>
               <Button

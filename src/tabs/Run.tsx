@@ -8,6 +8,7 @@ import * as QV from "../QVClient";
 import useInterval from "../useInterval";
 
 import Agenda from "./Agenda";
+import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 
 const ButtonMajor = styled.button<{ secondary?: boolean }>`
   border: none;
@@ -66,6 +67,10 @@ const PseudoTableBody = styled.ul`
   font-size: 15px;
 `;
 
+const InbetweenMessage = styled.p`
+  font-weight: 600;
+`;
+
 const PseudoTableRow = styled.li<{ result: string }>`
   display: flex;
   padding: 0.8rem 0;
@@ -111,8 +116,19 @@ const PseudoTableRow = styled.li<{ result: string }>`
     `}
 `;
 
+const AgendaWrapper = styled.div`
+  margin-top: 6rem;
+`;
+
 const QuickPollResults = styled.code`
   background: #ddd;
+`;
+
+const ButtonMessage = styled.p`
+  font-style: italic;
+  font-size: 13px;
+  position: relative;
+  top: 5px;
 `;
 
 interface ITallyResultsEntryWithState extends QV.ITallyResultsEntry {
@@ -251,11 +267,32 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
     fetchStageResults(model);
   }, 8000);
 
+  function renderAgenda() {
+    return (
+      <AgendaWrapper>
+        {client.GetMode(model) === QV.Mode.Inbetween && (
+          <InbetweenMessage>Current stage: inbetween votes</InbetweenMessage>
+        )}
+        <Agenda
+          authToken={authToken}
+          sheetId={sheetId}
+          model={model}
+          client={client}
+          setModel={() => {}}
+          readonly
+        />
+      </AgendaWrapper>
+    );
+  }
+
   if (model.done) {
     return (
-      <Copy>
-        <h3>The election has been completed.</h3>
-      </Copy>
+      <>
+        <Copy>
+          <h3>The election has been completed.</h3>
+        </Copy>
+        {renderAgenda()}
+      </>
     );
   }
 
@@ -273,7 +310,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 {quickPollResults && (
                   <p>
                     Results for the latest QuickPoll:{" "}
-                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                    <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
                 <ButtonMajor onClick={() => startQuickPoll()} secondary>
@@ -376,16 +413,22 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
             )}
             {client.GetMode(model) === QV.Mode.Inbetween && (
               <>
-                <p>Inbetween votes.</p>
                 {quickPollResults && (
                   <p>
                     Results for the latest QuickPoll:{" "}
-                    <QuickPollResults>${quickPollResults}</QuickPollResults>
+                    <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
-                <ButtonMajor onClick={() => startQuickPoll()} secondary>
-                  QuickPoll
-                </ButtonMajor>
+                <HorizontalList>
+                  <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                    QuickPoll
+                  </ButtonMajor>
+                  <ButtonMessage>
+                    Ask public Yes/No questions that aren’t on the agenda.
+                    <br />
+                    Useful for floor motions and Robert’s Rules.
+                  </ButtonMessage>
+                </HorizontalList>
                 <ButtonMajor
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
@@ -424,14 +467,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
           </>
         )}
       </Copy>
-      <Agenda
-        authToken={authToken}
-        sheetId={sheetId}
-        model={model}
-        client={client}
-        setModel={() => {}}
-        readonly
-      />
+      {renderAgenda()}
     </>
   );
 }

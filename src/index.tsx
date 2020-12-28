@@ -14,7 +14,7 @@ import Run from "./tabs/Run";
 import Reports from "./tabs/Reports";
 
 import * as QV from "./QVClient";
-import { withQVContainer } from "./QVContainer";
+import { withQVContainer, SERVER } from "./QVContainer";
 
 interface IState {
   Model: QV.IQVModel;
@@ -25,6 +25,17 @@ interface IProps {
   sheetId: string;
   model: QV.IQVModel;
 }
+
+const PageTitle = styled.h1`
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 26px;
+`;
+
+const PageDate = styled.p`
+  text-align: center;
+  font-style: italic;
+`;
 
 const LegacyUrl = styled.a`
   display: block;
@@ -41,12 +52,7 @@ export class App extends React.Component<IProps, IState> {
       Model: props.model,
     };
 
-    const server1 = "https://quickvote.voter-science.com";
-    const httpClient1 = XC.XClient.New(
-      server1,
-      this.props.authToken,
-      undefined
-    );
+    const httpClient1 = XC.XClient.New(SERVER, this.props.authToken, undefined);
     this.qvClient = new QV.QVClient(httpClient1, this.props.sheetId);
 
     this.handleTabClick = this.handleTabClick.bind(this);
@@ -66,6 +72,10 @@ export class App extends React.Component<IProps, IState> {
         description="A plugin for managing elections."
         title="QuickVote-Manage"
       >
+        <PageTitle>{this.state.Model.title}</PageTitle>
+        <PageDate>
+          on {new Date(this.props.model.targetDate).toLocaleDateString()}
+        </PageDate>
         <TabsPanel
           initialTab={
             new URLSearchParams(window.location.search).get("tab") ||
@@ -84,10 +94,7 @@ export class App extends React.Component<IProps, IState> {
             <Copy>
               <h3>Determines who is allowed to vote in the election</h3>
               <LegacyUrl
-                href={`https://quickvote.voter-science.com/Election/${this.props.sheetId.replace(
-                  "el_",
-                  ""
-                )}/manage`}
+                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/manage`}
                 target="_blank"
               >
                 Please access this functionality on the legacy management page
@@ -120,7 +127,11 @@ export class App extends React.Component<IProps, IState> {
             />
           </>
           <>
-            <Reports model={this.state.Model} />
+            <Reports
+              client={this.qvClient}
+              model={this.state.Model}
+              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+            />
           </>
         </TabsPanel>
       </PluginShell>

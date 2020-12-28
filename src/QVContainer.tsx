@@ -12,6 +12,9 @@ export interface IQVState {
   Model: QV.IQVModel; // set on Init
 }
 
+export const SERVER = "https://quickvote.voter-science.com";
+// export const SERVER = "https://localhost:44321";
+
 // Passed from Plugin hosting interface to call SetSheetRef()
 interface IPluginSheetRef {
   Server: string;
@@ -53,9 +56,7 @@ export function withQVContainer<P extends object>(
 
     // Called by PluginMain() once sheetId is available.
     public setSheetRef(sheetRef: IPluginSheetRef): void {
-      const server = "https://quickvote.voter-science.com";
-      // const server = "https://localhost:44321";
-      const httpClient = XC.XClient.New(server, sheetRef.AuthToken, undefined);
+      const httpClient = XC.XClient.New(SERVER, sheetRef.AuthToken, undefined);
       const sheetClient = new QV.QVClient(httpClient, sheetRef.SheetId);
 
       this.setState(
