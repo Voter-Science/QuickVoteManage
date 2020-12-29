@@ -42,6 +42,18 @@ const LegacyUrl = styled.a`
   color: #6485ff;
 `;
 
+const ButtonMajor = styled.a`
+  display: inline-block;
+  border: none;
+  border-radius: 2px;
+  color: #fff;
+  text-decoration: none;
+  background-color: #6485ff;
+  font-size: 16px;
+  padding: .8rem 1.5rem;
+  margin-top: 5rem;
+`;
+
 export class App extends React.Component<IProps, IState> {
   private qvClient: QV.QVClient;
 
@@ -99,6 +111,24 @@ export class App extends React.Component<IProps, IState> {
               >
                 Please access this functionality on the legacy management page
               </LegacyUrl>
+              <ButtonMajor
+                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/credential?return=1`}
+                target="_blank"
+              >
+                <i
+                  className="material-icons"
+                  style={{
+                    fontSize: "22px",
+                    lineHeight: "0",
+                    position: "relative",
+                    marginRight: "4px",
+                    top: "4px",
+                  }}
+                >
+                  text_snippet
+                </i>{" "}
+                Edit Credentials List
+              </ButtonMajor>
             </Copy>
           </>
           <>
