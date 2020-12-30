@@ -1,6 +1,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 import styled from "@emotion/styled";
+import { ToastContainer } from "react-toastify";
 
 import * as XC from "trc-httpshim/xclient";
 
@@ -8,6 +9,7 @@ import { PluginShell } from "trc-react/dist/PluginShell";
 import { Copy } from "trc-react/dist/common/Copy";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
+import Settings from "./tabs/Settings";
 import Invites from "./tabs/Invites";
 import Agenda from "./tabs/Agenda";
 import Run from "./tabs/Run";
@@ -50,7 +52,7 @@ const ButtonMajor = styled.a`
   text-decoration: none;
   background-color: #6485ff;
   font-size: 16px;
-  padding: .8rem 1.5rem;
+  padding: 0.8rem 1.5rem;
   margin-top: 5rem;
 `;
 
@@ -88,20 +90,29 @@ export class App extends React.Component<IProps, IState> {
         <PageDate>
           on {new Date(this.props.model.targetDate).toLocaleDateString()}
         </PageDate>
+        <ToastContainer />
         <TabsPanel
           initialTab={
             new URLSearchParams(window.location.search).get("tab") ||
-            "[3] Agenda"
+            "[4] Agenda"
           }
           tabNames={[
-            "[1] Credentials",
-            "[2] Invites",
-            "[3] Agenda",
-            "[4] Run",
-            "[5] Reports",
+            "[1] Settings",
+            "[2] Credentials",
+            "[3] Invites",
+            "[4] Agenda",
+            "[5] Run",
+            "[6] Reports",
           ]}
           onTabClick={this.handleTabClick}
         >
+          <>
+            <Settings
+              model={this.state.Model}
+              client={this.qvClient}
+              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+            />
+          </>
           <>
             <Copy>
               <h3>Determines who is allowed to vote in the election</h3>

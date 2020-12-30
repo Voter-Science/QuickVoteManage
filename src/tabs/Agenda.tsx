@@ -1,16 +1,14 @@
 import * as React from "react";
 import styled from "@emotion/styled";
 import css from "@emotion/css";
-import { ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
-import DatePicker from "react-datepicker";
 
 import * as XC from "trc-httpshim/xclient";
 
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
-import { Grid } from "trc-react/dist/common/Grid";
 import { Button } from "trc-react/dist/common/Button";
 
 import * as QV from "../QVClient";
@@ -168,24 +166,6 @@ const PseudoTableRow = styled.li<{
     `}
 `;
 
-const EditableTitle = styled.input`
-  background: none;
-  border: solid 1px rgb(118, 118, 118);
-  border-radius: 2px;
-  display: block;
-  width: 100%;
-  font-weight: 600;
-  font-size: 16px;
-  margin-bottom: 8px;
-  font-style: italic;
-  &:hover,
-  &:focus {
-    border: solid 1px #aaa;
-    border-radius: 2px;
-    outline: none;
-  }
-`;
-
 const EditableString = styled.input`
   border: none;
   background: none;
@@ -308,8 +288,6 @@ export class Agenda extends React.Component<IProps, IState> {
     this.addStage = this.addStage.bind(this);
     this.removeStage = this.removeStage.bind(this);
 
-    this.handlePageTitleChange = this.handlePageTitleChange.bind(this);
-    this.handlePageDateChange = this.handlePageDateChange.bind(this);
     this.handleTitleChange = this.handleTitleChange.bind(this);
     this.handlePolicyChange = this.handlePolicyChange.bind(this);
     this.handleForbidUndervoteChange = this.handleForbidUndervoteChange.bind(
@@ -352,20 +330,6 @@ export class Agenda extends React.Component<IProps, IState> {
     const stagesCopy = [...this.props.model.stages];
     stagesCopy.splice(index, 1);
     modelCopy.stages = stagesCopy;
-    this.props.setModel(modelCopy);
-    this.setState({ isDirty: true });
-  }
-
-  private handlePageTitleChange(e: React.ChangeEvent<HTMLInputElement>): void {
-    const modelCopy = { ...this.props.model };
-    modelCopy.title = e.target.value;
-    this.props.setModel(modelCopy);
-    this.setState({ isDirty: true });
-  }
-
-  private handlePageDateChange(date: Date): void {
-    const modelCopy = { ...this.props.model };
-    modelCopy.targetDate = date;
     this.props.setModel(modelCopy);
     this.setState({ isDirty: true });
   }
@@ -834,21 +798,7 @@ export class Agenda extends React.Component<IProps, IState> {
         {!this.props.readonly && (
           <>
             <Copy>
-              <h3>Edit the agenda and title</h3>
-              <Grid>
-                <EditableTitle
-                  value={this.props.model.title}
-                  type="text"
-                  onChange={this.handlePageTitleChange}
-                />
-                <div>
-                  on{" "}
-                  <DatePicker
-                    selected={new Date(this.props.model.targetDate)}
-                    onChange={this.handlePageDateChange}
-                  />
-                </div>
-              </Grid>
+              <h3>Edit the agenda</h3>
               {this.props.client.GetMode(this.props.model) ===
                 QV.Mode.Begin && (
                 <p>
@@ -934,8 +884,6 @@ export class Agenda extends React.Component<IProps, IState> {
 
         {!this.props.readonly && (
           <>
-            <ToastContainer />
-
             <HorizontalList alignRight>
               <Button
                 onClick={this.addStage}
