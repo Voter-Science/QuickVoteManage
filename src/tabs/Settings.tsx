@@ -183,6 +183,7 @@ export class Agenda extends React.Component<IProps, IState> {
     return this.props.client
       .PostUpdateOwners(this.props.model.owners.owners.filter(Boolean))
       .then(() => {
+        toast.success("Owners updated successfully.");
         this.setState({ isDirtyOwners: false });
       });
   }
