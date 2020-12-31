@@ -177,6 +177,9 @@ export class Agenda extends React.Component<IProps, IState> {
   }
 
   private saveOwners(): Promise<any> {
+    const modelCopy = { ...this.props.model };
+    modelCopy.owners.owners = modelCopy.owners.owners.filter(Boolean);
+    this.props.setModel(modelCopy);
     return this.props.client
       .PostUpdateOwners(this.props.model.owners.owners.filter(Boolean))
       .then(() => {
