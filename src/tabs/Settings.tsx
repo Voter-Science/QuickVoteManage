@@ -14,7 +14,7 @@ import * as QV from "../QVClient";
 interface IProps {
   client: QV.QVClient;
   model: QV.IQVModel;
-  setModel(model: QV.IQVModel): void;
+  setModel(model: QV.IQVModel, callback?: any): void;
 }
 
 interface IState {
@@ -157,26 +157,47 @@ export class Agenda extends React.Component<IProps, IState> {
 
   private removeOwner(index: number): void {
     const modelCopy = { ...this.props.model };
-    modelCopy.owners.owners.splice(index, 1);
-    this.props.setModel(modelCopy);
-    this.setState({ isDirtyOwners: true });
+    this.setState({ isDirtyOwners: true }, () => {
+      modelCopy.owners.owners.splice(index, 1);
+      this.props.setModel(modelCopy, () => {
+        this.saveOwners();
+      });
+    });
   }
 
   private addOwner(): void {
+    const email = prompt("Enter email: ");
     const modelCopy = { ...this.props.model };
-    if (!modelCopy.owners.owners[modelCopy.owners.owners.length - 1]) {
+    if (!email) {
       return;
     }
-    modelCopy.owners.owners.push("");
-    this.props.setModel(modelCopy);
-    this.setState({ isDirtyOwners: true });
+    this.setState({ isDirtyOwners: true }, () => {
+      modelCopy.owners.owners.push(email);
+      this.props.setModel(modelCopy, () => {
+        this.saveOwners();
+      });
+    });
   }
 
-  private save(): Promise<any> {
-    return this.props.client.PostModel(this.props.model);
+  private save() {
+    this.setState({ saving: true });
+    this.props.client
+      .PostModel(this.props.model)
+      .then(() => {
+        toast.success("Model updated successfully.");
+        this.setState({ saving: false, isDirty: false });
+      })
+      .catch((err) => {
+        alert("Error: " + err.Message);
+        toast.error("An error has occured, please try again.");
+        this.setState({ saving: false });
+      });
   }
 
   private saveOwners(): Promise<any> {
+    if (!this.state.isDirtyOwners) {
+      return;
+    }
     const modelCopy = { ...this.props.model };
     modelCopy.owners.owners = modelCopy.owners.owners.filter(Boolean);
     this.props.setModel(modelCopy);
@@ -185,6 +206,10 @@ export class Agenda extends React.Component<IProps, IState> {
       .then(() => {
         toast.success("Owners updated successfully.");
         this.setState({ isDirtyOwners: false });
+      })
+      .catch((err) => {
+        toast.error(err.Message);
+        this.setState({ saving: false });
       });
   }
 
@@ -202,12 +227,14 @@ export class Agenda extends React.Component<IProps, IState> {
               value={this.props.model.title}
               type="text"
               onChange={this.handlePageTitleChange}
+              onBlur={this.save}
             />
             <div>
               on{" "}
               <DatePicker
                 selected={new Date(this.props.model.targetDate)}
                 onChange={this.handlePageDateChange}
+                onBlur={this.save}
               />
             </div>
           </Grid>
@@ -255,6 +282,7 @@ export class Agenda extends React.Component<IProps, IState> {
                     value={owner}
                     type="text"
                     onChange={(e) => this.handleOwnerChange(e, index)}
+                    onBlur={this.saveOwners}
                   />
                   <RemoveStage
                     className="remove-stage"
@@ -274,38 +302,11 @@ export class Agenda extends React.Component<IProps, IState> {
                   </RemoveStage>
                 </Owner>
               ))}
-              <SimpleButton
-                disabled={!this.state.isDirtyOwners}
-                onClick={this.saveOwners}
-              >
-                Save
-              </SimpleButton>
               <SimpleButton onClick={this.addOwner}>Add</SimpleButton>
             </>
             <></>
           </Grid>
         </Section>
-
-        <HorizontalList alignRight>
-          <Button
-            disabled={this.state.saving || !this.state.isDirty}
-            onClick={async () => {
-              this.setState({ saving: true });
-              this.save()
-                .then(() => {
-                  toast.success("Model updated successfully.");
-                  this.setState({ saving: false, isDirty: false });
-                })
-                .catch((err) => {
-                  alert("Error: " + err.Message);
-                  toast.error("An error has occured, please try again.");
-                  this.setState({ saving: false });
-                });
-            }}
-          >
-            Save
-          </Button>
-        </HorizontalList>
       </>
     );
   }

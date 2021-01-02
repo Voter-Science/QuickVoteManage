@@ -110,7 +110,13 @@ export class App extends React.Component<IProps, IState> {
             <Settings
               model={this.state.Model}
               client={this.qvClient}
-              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+              setModel={(model: QV.IQVModel, callback?: any) =>
+                this.setState({ Model: model }, () => {
+                  if (callback) {
+                    callback(this.state.Model);
+                  }
+                })
+              }
             />
           </>
           <>
