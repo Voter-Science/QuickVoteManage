@@ -313,7 +313,7 @@ export class Agenda extends React.Component<IProps, IState> {
     const stagesCopy = [...this.props.model.stages];
     stagesCopy.push({
       policy: "Manual",
-      title: "Choose you candidate",
+      title: "Choose your candidate",
       nWinners: 1,
       forbidUndervote: false,
       sourceSlate: null,
