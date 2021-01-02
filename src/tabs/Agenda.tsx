@@ -767,7 +767,7 @@ export class Agenda extends React.Component<IProps, IState> {
               : "Winner"}
             :{" "}
             {this.props.model.stageResults[indx].winners.map((winner) => (
-              <span>{winner.name}</span>
+              <span key={winner.displayOrder}>{winner.name}</span>
             ))}
           </Winners>
         )}

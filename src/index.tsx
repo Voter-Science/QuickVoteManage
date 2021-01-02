@@ -20,6 +20,7 @@ import { withQVContainer, SERVER } from "./QVContainer";
 
 interface IState {
   Model: QV.IQVModel;
+  globalError: string;
 }
 
 interface IProps {
@@ -37,6 +38,11 @@ const PageTitle = styled.h1`
 const PageDate = styled.p`
   text-align: center;
   font-style: italic;
+`;
+
+const GlobalError = styled.p`
+  text-align: center;
+  color: red;
 `;
 
 const LegacyUrl = styled.a`
@@ -64,6 +70,7 @@ export class App extends React.Component<IProps, IState> {
 
     this.state = {
       Model: props.model,
+      globalError: "",
     };
 
     const httpClient1 = XC.XClient.New(SERVER, this.props.authToken, undefined);
@@ -90,6 +97,22 @@ export class App extends React.Component<IProps, IState> {
         <PageDate>
           on {new Date(this.props.model.targetDate).toLocaleDateString()}
         </PageDate>
+        {this.state.globalError && (
+          <GlobalError>
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "20px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              warning
+            </i>{" "}
+            {this.state.globalError}
+          </GlobalError>
+        )}
         <ToastContainer />
         <TabsPanel
           initialTab={
@@ -176,6 +199,9 @@ export class App extends React.Component<IProps, IState> {
                 this.setState({ Model: model }, () =>
                   callback(this.state.Model)
                 )
+              }
+              setGlobalError={(message: string) =>
+                this.setState({ globalError: message })
               }
             />
           </>

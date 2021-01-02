@@ -20,6 +20,9 @@ const ButtonMajor = styled.button<{ secondary?: boolean }>`
   font-weight: 700;
   display: block;
   margin-bottom: 1rem;
+  &:disabled {
+    opacity: 0.5;
+  }
   ${(props) =>
     props.secondary &&
     css`
@@ -141,9 +144,17 @@ interface IProps {
   client: QV.QVClient;
   model: QV.IQVModel;
   setModel(model: QV.IQVModel, callback: any): void;
+  setGlobalError(message: string): void;
 }
 
-function Run({ authToken, sheetId, client, model, setModel }: IProps) {
+function Run({
+  authToken,
+  sheetId,
+  client,
+  model,
+  setModel,
+  setGlobalError,
+}: IProps) {
   const [loading, setLoading] = React.useState(false);
   const [stageResults, setStageResults] = React.useState<QV.IManageResponse>(
     null
@@ -211,9 +222,10 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
       client.GetMode(stageModel) === QV.Mode.Stage ||
       client.GetMode(stageModel) === QV.Mode.InbetweenQuickpoll
     ) {
-      client
-        .GetPollResult(stageModel.stageRoundMoniker)
-        .then((data) => setStageResults(data));
+      client.GetPollResult(stageModel.stageRoundMoniker).then((data) => {
+        setGlobalError(data.errorMessage);
+        setStageResults(data);
+      });
     } else {
       setStageResults(null);
     }
@@ -345,7 +357,24 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 ) : (
                   <p>Loading results...</p>
                 )}
+                {stageResults?.errorMessage && (
+                  <p style={{ color: "red" }}>
+                    <i
+                      className="material-icons"
+                      style={{
+                        fontSize: "20px",
+                        lineHeight: "0",
+                        position: "relative",
+                        top: "4px",
+                      }}
+                    >
+                      warning
+                    </i>{" "}
+                    {stageResults.errorMessage}
+                  </p>
+                )}
                 <ButtonMajor
+                  disabled={!!stageResults?.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Close voting
