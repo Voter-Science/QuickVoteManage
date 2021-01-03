@@ -17,6 +17,7 @@ import Reports from "./tabs/Reports";
 
 import * as QV from "./QVClient";
 import { withQVContainer, SERVER } from "./QVContainer";
+import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 
 interface IState {
   Model: QV.IQVModel;
@@ -61,6 +62,14 @@ const ButtonMajor = styled.a`
   padding: 0.8rem 1.5rem;
   margin-top: 5rem;
 `;
+
+const ButtonMessage = styled.p`
+  font-style: italic;
+  font-size: 13px;
+  position: relative;
+  top: 5px;
+`;
+
 
 export class App extends React.Component<IProps, IState> {
   private qvClient: QV.QVClient;
@@ -145,30 +154,57 @@ export class App extends React.Component<IProps, IState> {
           <>
             <Copy>
               <h3>Determines who is allowed to vote in the election</h3>
-              <LegacyUrl
-                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/manage`}
-                target="_blank"
-              >
-                Please access this functionality on the legacy management page
-              </LegacyUrl>
-              <ButtonMajor
-                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/credential?return=1`}
-                target="_blank"
-              >
-                <i
-                  className="material-icons"
-                  style={{
-                    fontSize: "22px",
-                    lineHeight: "0",
-                    position: "relative",
-                    marginRight: "4px",
-                    top: "4px",
-                  }}
+              <HorizontalList>
+                <ButtonMajor
+                  href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/manage?userTableOnly=true`}
+                  target="_blank"
                 >
-                  text_snippet
-                </i>{" "}
-                Edit Credentials List
-              </ButtonMajor>
+                  <i
+                    className="material-icons"
+                    style={{
+                      fontSize: "22px",
+                      lineHeight: "0",
+                      position: "relative",
+                      marginRight: "4px",
+                      top: "4px",
+                    }}
+                  >
+                    person_search
+                  </i>{" "}
+                  View Current Users
+                </ButtonMajor>
+                <ButtonMessage>
+                    Show realtime view of users currently connected to this election. 
+                </ButtonMessage>
+              </HorizontalList>
+
+              <HorizontalList>
+                <ButtonMajor
+                  href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/credential?return=1`}
+                  target="_blank"
+                >
+                  <i
+                    className="material-icons"
+                    style={{
+                      fontSize: "22px",
+                      lineHeight: "0",
+                      position: "relative",
+                      marginRight: "4px",
+                      top: "4px",
+                    }}
+                  >
+                    text_snippet
+                  </i>{" "}
+                  Edit Credentials List
+                </ButtonMajor>
+
+                <ButtonMessage>
+                    Upload or Download the user list as a CSV.
+                </ButtonMessage>
+              </HorizontalList>
+
+
+
             </Copy>
           </>
           <>

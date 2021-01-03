@@ -251,8 +251,7 @@ export class Agenda extends React.Component<IProps, IState> {
           {this.props.model.quotaMetadata.buyLink && (
             <p>
               <ButtonMajor
-                href={`${this.props.model.quotaMetadata.buyLink}&redirectURI=${window.location.href}`}
-                target="_blank"
+                href={`${this.props.model.quotaMetadata.buyLink}&redirectURI=${window.location.href}`}                
               >
                 <i
                   className="material-icons"
@@ -274,6 +273,9 @@ export class Agenda extends React.Component<IProps, IState> {
 
         <Section>
           <h4>Owners</h4>
+          <Copy>
+            <p>Emails for who has permission to administer the election?</p>
+          </Copy>
           <Grid>
             <>
               {this.props.model.owners.owners.map((owner, index) => (
