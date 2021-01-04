@@ -124,7 +124,7 @@ export class App extends React.Component<IProps, IState> {
             />
           </>
           <>
-            <Credentials client={this.qvClient} />
+            <Credentials model={this.state.Model} client={this.qvClient} />
           </>
           <>
             <Invites model={this.state.Model} client={this.qvClient} />
