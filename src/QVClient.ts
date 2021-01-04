@@ -174,6 +174,8 @@ export interface IQVModel extends IQVModelEdit {
   owners: {
     owners: string[];
   };
+
+  errorMessage: string;
 }
 
 export enum Mode {

@@ -144,17 +144,9 @@ interface IProps {
   client: QV.QVClient;
   model: QV.IQVModel;
   setModel(model: QV.IQVModel, callback: any): void;
-  setGlobalError(message: string): void;
 }
 
-function Run({
-  authToken,
-  sheetId,
-  client,
-  model,
-  setModel,
-  setGlobalError,
-}: IProps) {
+function Run({ authToken, sheetId, client, model, setModel }: IProps) {
   const [loading, setLoading] = React.useState(false);
   const [stageResults, setStageResults] = React.useState<QV.IManageResponse>(
     null
@@ -223,7 +215,6 @@ function Run({
       client.GetMode(stageModel) === QV.Mode.InbetweenQuickpoll
     ) {
       client.GetPollResult(stageModel.stageRoundMoniker).then((data) => {
-        setGlobalError(data.errorMessage);
         setStageResults(data);
       });
     } else {
@@ -308,6 +299,29 @@ function Run({
     );
   }
 
+  function renderError() {
+    return (
+      <>
+        {model.errorMessage && (
+          <p style={{ color: "red" }}>
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "20px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              warning
+            </i>{" "}
+            {model.errorMessage}
+          </p>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <Copy>
@@ -325,10 +339,16 @@ function Run({
                     <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
-                <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                {renderError()}
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => startQuickPoll()}
+                  secondary
+                >
                   QuickPoll
                 </ButtonMajor>
                 <ButtonMajor
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Begin
@@ -357,24 +377,9 @@ function Run({
                 ) : (
                   <p>Loading results...</p>
                 )}
-                {stageResults?.errorMessage && (
-                  <p style={{ color: "red" }}>
-                    <i
-                      className="material-icons"
-                      style={{
-                        fontSize: "20px",
-                        lineHeight: "0",
-                        position: "relative",
-                        top: "4px",
-                      }}
-                    >
-                      warning
-                    </i>{" "}
-                    {stageResults.errorMessage}
-                  </p>
-                )}
+                {renderError()}
                 <ButtonMajor
-                  disabled={!!stageResults?.errorMessage}
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Close voting
@@ -390,6 +395,7 @@ function Run({
                 </p>
                 <p>If you pick less, there will be a runoff.</p>
                 {resultsError && <p style={{ color: "red" }}>{resultsError}</p>}
+                {renderError()}
                 <PseudoTableHeader>
                   <div>Name</div>
                   <div>Votes</div>
@@ -435,7 +441,10 @@ function Run({
                   ))}
                 </PseudoTableBody>
 
-                <ButtonMajor onClick={() => validateResults()}>
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => validateResults()}
+                >
                   Submit results
                 </ButtonMajor>
               </>
@@ -448,8 +457,13 @@ function Run({
                     <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
+                {renderError()}
                 <HorizontalList>
-                  <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                  <ButtonMajor
+                    disabled={!!model.errorMessage}
+                    onClick={() => startQuickPoll()}
+                    secondary
+                  >
                     QuickPoll
                   </ButtonMajor>
                   <ButtonMessage>
@@ -459,6 +473,7 @@ function Run({
                   </ButtonMessage>
                 </HorizontalList>
                 <ButtonMajor
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Next round
@@ -488,7 +503,11 @@ function Run({
                 ) : (
                   <p>Loading results...</p>
                 )}
-                <ButtonMajor onClick={() => closeQuickPoll()}>
+                {renderError()}
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => closeQuickPoll()}
+                >
                   Close poll
                 </ButtonMajor>
               </>

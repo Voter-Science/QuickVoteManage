@@ -21,7 +21,6 @@ import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 
 interface IState {
   Model: QV.IQVModel;
-  globalError: string;
 }
 
 interface IProps {
@@ -46,11 +45,6 @@ const GlobalError = styled.p`
   color: red;
 `;
 
-const LegacyUrl = styled.a`
-  display: block;
-  color: #6485ff;
-`;
-
 const ButtonMajor = styled.a`
   display: inline-block;
   border: none;
@@ -70,7 +64,6 @@ const ButtonMessage = styled.p`
   top: 5px;
 `;
 
-
 export class App extends React.Component<IProps, IState> {
   private qvClient: QV.QVClient;
 
@@ -79,7 +72,6 @@ export class App extends React.Component<IProps, IState> {
 
     this.state = {
       Model: props.model,
-      globalError: "",
     };
 
     const httpClient1 = XC.XClient.New(SERVER, this.props.authToken, undefined);
@@ -106,7 +98,7 @@ export class App extends React.Component<IProps, IState> {
         <PageDate>
           on {new Date(this.props.model.targetDate).toLocaleDateString()}
         </PageDate>
-        {this.state.globalError && (
+        {this.state.Model.errorMessage && (
           <GlobalError>
             <i
               className="material-icons"
@@ -119,7 +111,7 @@ export class App extends React.Component<IProps, IState> {
             >
               warning
             </i>{" "}
-            {this.state.globalError}
+            {this.state.Model.errorMessage}
           </GlobalError>
         )}
         <ToastContainer />
@@ -174,7 +166,8 @@ export class App extends React.Component<IProps, IState> {
                   View Current Users
                 </ButtonMajor>
                 <ButtonMessage>
-                    Show realtime view of users currently connected to this election. 
+                  Show realtime view of users currently connected to this
+                  election.
                 </ButtonMessage>
               </HorizontalList>
 
@@ -199,12 +192,9 @@ export class App extends React.Component<IProps, IState> {
                 </ButtonMajor>
 
                 <ButtonMessage>
-                    Upload or Download the user list as a CSV.
+                  Upload or Download the user list as a CSV.
                 </ButtonMessage>
               </HorizontalList>
-
-
-
             </Copy>
           </>
           <>
@@ -235,9 +225,6 @@ export class App extends React.Component<IProps, IState> {
                 this.setState({ Model: model }, () =>
                   callback(this.state.Model)
                 )
-              }
-              setGlobalError={(message: string) =>
-                this.setState({ globalError: message })
               }
             />
           </>
