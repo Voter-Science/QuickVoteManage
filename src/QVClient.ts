@@ -165,6 +165,17 @@ export interface IQVModel extends IQVModelEdit {
   reportMetadata?: IReportMetadata[];
 
   credentialMetadata?: ICredentialMetadata;
+
+  quotaMetadata: {
+    maxUsers: number;
+    buyLink?: string;
+  };
+
+  owners: {
+    owners: string[];
+  };
+
+  errorMessage: string;
 }
 
 export enum Mode {
@@ -267,5 +278,11 @@ export class QVClient {
     const plainUri = `/api/manage/${this._sheetId}/reset`;
     const uri = new XC.UrlBuilder(plainUri);
     return this._http.postAsync(uri, {});
+  }
+
+  public PostUpdateOwners(owners: string[]): Promise<any> {
+    const plainUri = `/api/manage/${this._sheetId}/updateOwners`;
+    const uri = new XC.UrlBuilder(plainUri);
+    return this._http.postAsync(uri, { owners });
   }
 }

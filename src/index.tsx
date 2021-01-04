@@ -6,10 +6,10 @@ import { ToastContainer } from "react-toastify";
 import * as XC from "trc-httpshim/xclient";
 
 import { PluginShell } from "trc-react/dist/PluginShell";
-import { Copy } from "trc-react/dist/common/Copy";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
 import Settings from "./tabs/Settings";
+import Credentials from "./tabs/Credentials";
 import Invites from "./tabs/Invites";
 import Agenda from "./tabs/Agenda";
 import Run from "./tabs/Run";
@@ -39,21 +39,9 @@ const PageDate = styled.p`
   font-style: italic;
 `;
 
-const LegacyUrl = styled.a`
-  display: block;
-  color: #6485ff;
-`;
-
-const ButtonMajor = styled.a`
-  display: inline-block;
-  border: none;
-  border-radius: 2px;
-  color: #fff;
-  text-decoration: none;
-  background-color: #6485ff;
-  font-size: 16px;
-  padding: 0.8rem 1.5rem;
-  margin-top: 5rem;
+const GlobalError = styled.p`
+  text-align: center;
+  color: red;
 `;
 
 export class App extends React.Component<IProps, IState> {
@@ -90,6 +78,22 @@ export class App extends React.Component<IProps, IState> {
         <PageDate>
           on {new Date(this.props.model.targetDate).toLocaleDateString()}
         </PageDate>
+        {this.state.Model.errorMessage && (
+          <GlobalError>
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "20px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              warning
+            </i>{" "}
+            {this.state.Model.errorMessage}
+          </GlobalError>
+        )}
         <ToastContainer />
         <TabsPanel
           initialTab={
@@ -110,37 +114,17 @@ export class App extends React.Component<IProps, IState> {
             <Settings
               model={this.state.Model}
               client={this.qvClient}
-              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+              setModel={(model: QV.IQVModel, callback?: any) =>
+                this.setState({ Model: model }, () => {
+                  if (callback) {
+                    callback(this.state.Model);
+                  }
+                })
+              }
             />
           </>
           <>
-            <Copy>
-              <h3>Determines who is allowed to vote in the election</h3>
-              <LegacyUrl
-                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/manage`}
-                target="_blank"
-              >
-                Please access this functionality on the legacy management page
-              </LegacyUrl>
-              <ButtonMajor
-                href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/credential?return=1`}
-                target="_blank"
-              >
-                <i
-                  className="material-icons"
-                  style={{
-                    fontSize: "22px",
-                    lineHeight: "0",
-                    position: "relative",
-                    marginRight: "4px",
-                    top: "4px",
-                  }}
-                >
-                  text_snippet
-                </i>{" "}
-                Edit Credentials List
-              </ButtonMajor>
-            </Copy>
+            <Credentials model={this.state.Model} client={this.qvClient} />
           </>
           <>
             <Invites model={this.state.Model} client={this.qvClient} />
@@ -151,7 +135,13 @@ export class App extends React.Component<IProps, IState> {
               sheetId={this.props.sheetId}
               model={this.state.Model}
               client={this.qvClient}
-              setModel={(model: QV.IQVModel) => this.setState({ Model: model })}
+              setModel={(model: QV.IQVModel, callback?: any) =>
+                this.setState({ Model: model }, () => {
+                  if (callback) {
+                    callback(this.state.Model);
+                  }
+                })
+              }
             />
           </>
           <>

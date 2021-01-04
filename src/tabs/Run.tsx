@@ -1,6 +1,7 @@
 import * as React from "react";
 import styled from "@emotion/styled";
 import css from "@emotion/css";
+import { toast } from "react-toastify";
 
 import { Copy } from "trc-react/dist/common/Copy";
 
@@ -20,6 +21,9 @@ const ButtonMajor = styled.button<{ secondary?: boolean }>`
   font-weight: 700;
   display: block;
   margin-bottom: 1rem;
+  &:disabled {
+    opacity: 0.5;
+  }
   ${(props) =>
     props.secondary &&
     css`
@@ -169,12 +173,18 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
     setLoading(true);
     setStageResults(null);
     setQuickPollResults("");
-    client.PostMoveToNextRound(stageRoundMoniker).then(() => {
-      client.GetModel().then((data) => {
-        setModel(data, fetchStageResults);
+    client
+      .PostMoveToNextRound(stageRoundMoniker)
+      .then(() => {
+        client.GetModel().then((data) => {
+          setModel(data, fetchStageResults);
+          setLoading(false);
+        });
+      })
+      .catch((err) => {
+        toast.error(err.Message);
         setLoading(false);
       });
-    });
   }
 
   function startQuickPoll() {
@@ -211,9 +221,9 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
       client.GetMode(stageModel) === QV.Mode.Stage ||
       client.GetMode(stageModel) === QV.Mode.InbetweenQuickpoll
     ) {
-      client
-        .GetPollResult(stageModel.stageRoundMoniker)
-        .then((data) => setStageResults(data));
+      client.GetPollResult(stageModel.stageRoundMoniker).then((data) => {
+        setStageResults(data);
+      });
     } else {
       setStageResults(null);
     }
@@ -296,6 +306,29 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
     );
   }
 
+  function renderError() {
+    return (
+      <>
+        {model.errorMessage && (
+          <p style={{ color: "red" }}>
+            <i
+              className="material-icons"
+              style={{
+                fontSize: "20px",
+                lineHeight: "0",
+                position: "relative",
+                top: "4px",
+              }}
+            >
+              warning
+            </i>{" "}
+            {model.errorMessage}
+          </p>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       <Copy>
@@ -313,10 +346,16 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                     <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
-                <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                {renderError()}
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => startQuickPoll()}
+                  secondary
+                >
                   QuickPoll
                 </ButtonMajor>
                 <ButtonMajor
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Begin
@@ -345,7 +384,9 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 ) : (
                   <p>Loading results...</p>
                 )}
+                {renderError()}
                 <ButtonMajor
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Close voting
@@ -361,6 +402,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 </p>
                 <p>If you pick less, there will be a runoff.</p>
                 {resultsError && <p style={{ color: "red" }}>{resultsError}</p>}
+                {renderError()}
                 <PseudoTableHeader>
                   <div>Name</div>
                   <div>Votes</div>
@@ -406,7 +448,10 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                   ))}
                 </PseudoTableBody>
 
-                <ButtonMajor onClick={() => validateResults()}>
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => validateResults()}
+                >
                   Submit results
                 </ButtonMajor>
               </>
@@ -419,8 +464,13 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                     <QuickPollResults>{quickPollResults}</QuickPollResults>
                   </p>
                 )}
+                {renderError()}
                 <HorizontalList>
-                  <ButtonMajor onClick={() => startQuickPoll()} secondary>
+                  <ButtonMajor
+                    disabled={!!model.errorMessage}
+                    onClick={() => startQuickPoll()}
+                    secondary
+                  >
                     QuickPoll
                   </ButtonMajor>
                   <ButtonMessage>
@@ -430,6 +480,7 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                   </ButtonMessage>
                 </HorizontalList>
                 <ButtonMajor
+                  disabled={!!model.errorMessage}
                   onClick={() => moveToNextRound(model.stageRoundMoniker)}
                 >
                   Next round
@@ -459,7 +510,11 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
                 ) : (
                   <p>Loading results...</p>
                 )}
-                <ButtonMajor onClick={() => closeQuickPoll()}>
+                {renderError()}
+                <ButtonMajor
+                  disabled={!!model.errorMessage}
+                  onClick={() => closeQuickPoll()}
+                >
                   Close poll
                 </ButtonMajor>
               </>

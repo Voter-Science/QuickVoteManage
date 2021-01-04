@@ -19,7 +19,7 @@ interface IProps {
   sheetId: string;
   client: QV.QVClient;
   model: QV.IQVModel;
-  setModel(model: QV.IQVModel): void;
+  setModel(model: QV.IQVModel, callback?: any): void;
   readonly?: boolean;
 }
 
@@ -312,17 +312,16 @@ export class Agenda extends React.Component<IProps, IState> {
     const modelCopy = { ...this.props.model };
     const stagesCopy = [...this.props.model.stages];
     stagesCopy.push({
-      policy: "TopN",
-      title: "",
+      policy: "Manual",
+      title: "Choose your candidate",
       nWinners: 1,
       forbidUndervote: false,
       sourceSlate: null,
-      sourceInline: "Yes,No",
+      sourceInline: "CandidateA, CandidateB, CandidateC",
       sourceAlternates: false,
     });
     modelCopy.stages = stagesCopy;
-    this.props.setModel(modelCopy);
-    this.setState({ isDirty: true });
+    this.props.setModel(modelCopy, this.save);
   }
 
   private removeStage(index: number) {
@@ -505,8 +504,19 @@ export class Agenda extends React.Component<IProps, IState> {
     this.setState({ isDirty: true });
   }
 
-  private save(): Promise<any> {
-    return this.props.client.PostModel(this.props.model);
+  private save() {
+    this.setState({ saving: true });
+    this.props.client
+      .PostModel(this.props.model)
+      .then(() => {
+        toast.success("Model updated successfully.");
+        this.setState({ saving: false, isDirty: false });
+      })
+      .catch((err) => {
+        alert("Error: " + err.Message);
+        toast.error("An error has occured, please try again.");
+        this.setState({ saving: false });
+      });
   }
 
   private SortableList = SortableContainer(() => {
@@ -757,7 +767,7 @@ export class Agenda extends React.Component<IProps, IState> {
               : "Winner"}
             :{" "}
             {this.props.model.stageResults[indx].winners.map((winner) => (
-              <span>{winner.name}</span>
+              <span key={winner.displayOrder}>{winner.name}</span>
             ))}
           </Winners>
         )}
@@ -893,19 +903,7 @@ export class Agenda extends React.Component<IProps, IState> {
               </Button>
               <Button
                 disabled={this.state.saving || !this.state.isDirty}
-                onClick={async () => {
-                  this.setState({ saving: true });
-                  this.save()
-                    .then(() => {
-                      toast.success("Model updated successfully.");
-                      this.setState({ saving: false, isDirty: false });
-                    })
-                    .catch((err) => {
-                      alert("Error: " + err.Message);
-                      toast.error("An error has occured, please try again.");
-                      this.setState({ saving: false });
-                    });
-                }}
+                onClick={this.save}
               >
                 Save
               </Button>
