@@ -1,6 +1,7 @@
 import * as React from "react";
 import styled from "@emotion/styled";
 import css from "@emotion/css";
+import { toast } from "react-toastify";
 
 import { Copy } from "trc-react/dist/common/Copy";
 
@@ -172,12 +173,18 @@ function Run({ authToken, sheetId, client, model, setModel }: IProps) {
     setLoading(true);
     setStageResults(null);
     setQuickPollResults("");
-    client.PostMoveToNextRound(stageRoundMoniker).then(() => {
-      client.GetModel().then((data) => {
-        setModel(data, fetchStageResults);
+    client
+      .PostMoveToNextRound(stageRoundMoniker)
+      .then(() => {
+        client.GetModel().then((data) => {
+          setModel(data, fetchStageResults);
+          setLoading(false);
+        });
+      })
+      .catch((err) => {
+        toast.error(err.Message);
         setLoading(false);
       });
-    });
   }
 
   function startQuickPoll() {
