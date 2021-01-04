@@ -198,6 +198,7 @@ export class Agenda extends React.Component<IProps, IState> {
     if (!this.state.isDirtyOwners) {
       return;
     }
+    this.setState({ saving: true });
     const modelCopy = { ...this.props.model };
     modelCopy.owners.owners = modelCopy.owners.owners.filter(Boolean);
     this.props.setModel(modelCopy);
@@ -205,11 +206,14 @@ export class Agenda extends React.Component<IProps, IState> {
       .PostUpdateOwners(this.props.model.owners.owners.filter(Boolean))
       .then(() => {
         toast.success("Owners updated successfully.");
-        this.setState({ isDirtyOwners: false });
+        this.setState({ isDirtyOwners: false, saving: false });
       })
       .catch((err) => {
         toast.error(err.Message);
-        this.setState({ saving: false });
+        this.props.client.GetModel().then((data) => {
+          this.props.setModel(data);
+          this.setState({ saving: false });
+        });
       });
   }
 
@@ -234,6 +238,7 @@ export class Agenda extends React.Component<IProps, IState> {
               <DatePicker
                 selected={new Date(this.props.model.targetDate)}
                 onChange={this.handlePageDateChange}
+                onSelect={this.save}
                 onBlur={this.save}
               />
             </div>
@@ -251,7 +256,7 @@ export class Agenda extends React.Component<IProps, IState> {
           {this.props.model.quotaMetadata.buyLink && (
             <p>
               <ButtonMajor
-                href={`${this.props.model.quotaMetadata.buyLink}&redirectURI=${window.location.href}`}                
+                href={`${this.props.model.quotaMetadata.buyLink}&redirectURI=${window.location.href}`}
               >
                 <i
                   className="material-icons"
@@ -304,7 +309,12 @@ export class Agenda extends React.Component<IProps, IState> {
                   </RemoveStage>
                 </Owner>
               ))}
-              <SimpleButton onClick={this.addOwner}>Add</SimpleButton>
+              <SimpleButton
+                onClick={this.addOwner}
+                disabled={this.state.saving}
+              >
+                Add
+              </SimpleButton>
             </>
             <></>
           </Grid>
