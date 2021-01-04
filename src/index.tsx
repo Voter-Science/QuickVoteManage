@@ -6,10 +6,10 @@ import { ToastContainer } from "react-toastify";
 import * as XC from "trc-httpshim/xclient";
 
 import { PluginShell } from "trc-react/dist/PluginShell";
-import { Copy } from "trc-react/dist/common/Copy";
 import { TabsPanel } from "trc-react/dist/common/TabsPanel";
 
 import Settings from "./tabs/Settings";
+import Credentials from "./tabs/Credentials";
 import Invites from "./tabs/Invites";
 import Agenda from "./tabs/Agenda";
 import Run from "./tabs/Run";
@@ -17,7 +17,6 @@ import Reports from "./tabs/Reports";
 
 import * as QV from "./QVClient";
 import { withQVContainer, SERVER } from "./QVContainer";
-import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 
 interface IState {
   Model: QV.IQVModel;
@@ -43,25 +42,6 @@ const PageDate = styled.p`
 const GlobalError = styled.p`
   text-align: center;
   color: red;
-`;
-
-const ButtonMajor = styled.a`
-  display: inline-block;
-  border: none;
-  border-radius: 2px;
-  color: #fff;
-  text-decoration: none;
-  background-color: #6485ff;
-  font-size: 16px;
-  padding: 0.8rem 1.5rem;
-  margin-top: 5rem;
-`;
-
-const ButtonMessage = styled.p`
-  font-style: italic;
-  font-size: 13px;
-  position: relative;
-  top: 5px;
 `;
 
 export class App extends React.Component<IProps, IState> {
@@ -144,58 +124,7 @@ export class App extends React.Component<IProps, IState> {
             />
           </>
           <>
-            <Copy>
-              <h3>Determines who is allowed to vote in the election</h3>
-              <HorizontalList>
-                <ButtonMajor
-                  href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/manage?userTableOnly=true`}
-                  target="_blank"
-                >
-                  <i
-                    className="material-icons"
-                    style={{
-                      fontSize: "22px",
-                      lineHeight: "0",
-                      position: "relative",
-                      marginRight: "4px",
-                      top: "4px",
-                    }}
-                  >
-                    person_search
-                  </i>{" "}
-                  View Current Users
-                </ButtonMajor>
-                <ButtonMessage>
-                  Show realtime view of users currently connected to this
-                  election.
-                </ButtonMessage>
-              </HorizontalList>
-
-              <HorizontalList>
-                <ButtonMajor
-                  href={`https://quickvote.voter-science.com/Election/${this.qvClient.GetShortId()}/credential?return=1`}
-                  target="_blank"
-                >
-                  <i
-                    className="material-icons"
-                    style={{
-                      fontSize: "22px",
-                      lineHeight: "0",
-                      position: "relative",
-                      marginRight: "4px",
-                      top: "4px",
-                    }}
-                  >
-                    text_snippet
-                  </i>{" "}
-                  Edit Credentials List
-                </ButtonMajor>
-
-                <ButtonMessage>
-                  Upload or Download the user list as a CSV.
-                </ButtonMessage>
-              </HorizontalList>
-            </Copy>
+            <Credentials client={this.qvClient} />
           </>
           <>
             <Invites model={this.state.Model} client={this.qvClient} />
