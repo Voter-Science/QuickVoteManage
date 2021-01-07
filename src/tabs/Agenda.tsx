@@ -732,17 +732,19 @@ export class Agenda extends React.Component<IProps, IState> {
                 {this.state.slatesMap[stage.sourceSlate] === false && (
                   <SlateError>Invalid slate ID</SlateError>
                 )}
-                <CreateNewSlate
-                  href="https://petitionbuilder.org/slate/create"
-                  target="_blank"
-                >
-                  Create new slate
-                </CreateNewSlate>
+                {!this.props.readonly && (
+                  <CreateNewSlate
+                    href="https://petitionbuilder.org/slate/create"
+                    target="_blank"
+                  >
+                    Create new slate
+                  </CreateNewSlate>
+                )}
               </div>
             </>
           )}
         </div>
-        {indx > this.props.model.stage && (
+        {!this.props.readonly && indx > this.props.model.stage && (
           <RemoveStage
             className="remove-stage"
             onClick={() => this.removeStage(indx)}
