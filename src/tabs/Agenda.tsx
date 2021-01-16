@@ -540,18 +540,6 @@ export class Agenda extends React.Component<IProps, IState> {
   });
 
   private SortableItem = SortableElement(({ stage, indx }: any) => {
-    let sourceTooltipMessage = "";
-    const source = this.calculateSourceValue(indx);
-    if (source === "yn") sourceTooltipMessage = "Choices are “yes,no”";
-    if (source === "slate")
-      sourceTooltipMessage =
-        "Choices are pulled from a Slate page via PetitionBuilder.org";
-    if (source === "alternates")
-      sourceTooltipMessage =
-        "Choices from this stage are the losers from the previous stage.";
-    if (source === "inline")
-      sourceTooltipMessage = "Enter candidate names directly here.";
-
     return (
       <PseudoTableRow
         current={this.props.model.stage === indx}
@@ -575,25 +563,6 @@ export class Agenda extends React.Component<IProps, IState> {
               </option>
             ))}
           </EditableOption>
-          <span
-            data-tip={
-              this.props.model?.policyDetails.find(
-                (x) => x.key === stage.policy
-              )?.description
-            }
-          >
-            <i
-              className="material-icons"
-              style={{
-                fontSize: "17px",
-                lineHeight: "0",
-                position: "relative",
-                top: "4px",
-              }}
-            >
-              info
-            </i>
-          </span>
         </div>
         <div>
           <EditableString
