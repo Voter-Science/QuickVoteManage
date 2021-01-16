@@ -4,6 +4,7 @@ import css from "@emotion/css";
 import { toast } from "react-toastify";
 import ReactTooltip from "react-tooltip";
 import { SortableContainer, SortableElement } from "react-sortable-hoc";
+import * as autosize from "autosize";
 
 import * as XC from "trc-httpshim/xclient";
 
@@ -58,19 +59,19 @@ const PseudoTableHeader = styled.div<{ saving: boolean }>`
     width: 3%;
   }
   > div:nth-child(2) {
-    width: 10%;
+    width: 9%;
   }
   > div:nth-child(3) {
     width: 18%;
   }
   > div:nth-child(4) {
-    width: 15%;
+    width: 12%;
   }
   > div:nth-child(5) {
-    width: 18%;
+    width: 11%;
   }
   > div:nth-child(6) {
-    width: 36%;
+    width: 47%;
   }
   ${(props) =>
     props.saving &&
@@ -126,7 +127,7 @@ const PseudoTableRow = styled.li<{
     }
   }
   > div:nth-child(2) {
-    width: 10%;
+    width: 9%;
     overflow: hidden;
     border-right: solid 8px transparent;
   }
@@ -134,13 +135,13 @@ const PseudoTableRow = styled.li<{
     width: 18%;
   }
   > div:nth-child(4) {
-    width: 15%;
+    width: 12%;
   }
   > div:nth-child(5) {
-    width: 18%;
+    width: 11%;
   }
   > div:nth-child(6) {
-    width: 36%;
+    width: 47%;
   }
   &:hover .remove-stage {
     display: block;
@@ -181,11 +182,28 @@ const EditableString = styled.input`
   }
 `;
 
+const EditableTextarea = styled.textarea`
+  border: none;
+  background: none;
+  display: inline;
+  resize: none;
+  line-height: 1.35;
+  font-size: 12px;
+  height: 16px;
+  &:hover,
+  &:focus {
+    border: solid 1px #aaa;
+    border-radius: 2px;
+    outline: none;
+  }
+`;
+
 const EditableOption = styled.select`
   appearance: none;
   border: none;
   background: none;
   margin-right: 3px;
+  vertical-align: top;
   &:hover,
   &:focus {
     border-bottom: solid 2px #aaa;
@@ -321,7 +339,10 @@ export class Agenda extends React.Component<IProps, IState> {
       sourceAlternates: false,
     });
     modelCopy.stages = stagesCopy;
-    this.props.setModel(modelCopy, this.save);
+    this.props.setModel(modelCopy, () => {
+      this.save();
+      this.autosizing();
+    });
   }
 
   private removeStage(index: number) {
@@ -465,7 +486,9 @@ export class Agenda extends React.Component<IProps, IState> {
     }
 
     modelCopy.stages = stagesCopy;
-    this.props.setModel(modelCopy);
+    this.props.setModel(modelCopy, () => {
+      this.autosizing();
+    });
     this.setState({ isDirty: true });
   }
 
@@ -594,7 +617,7 @@ export class Agenda extends React.Component<IProps, IState> {
           <EditableOption
             value={stage.filterUser ? stage.filterUser.split(":")[0] : ""}
             onChange={(e) => this.handleFilterUserChange1(e.target.value, indx)}
-            style={{ width: "64px" }}
+            style={{ width: "88px" }}
           >
             <option value="">Everyone</option>
             {this.props.model.filterMetadata &&
@@ -608,14 +631,13 @@ export class Agenda extends React.Component<IProps, IState> {
           </EditableOption>
           {stage.filterUser && (
             <>
-              {" "}
-              ={" "}
+              <span style={{ position: "relative", top: "-2px" }}>=</span>{" "}
               <EditableOption
                 value={stage.filterUser ? stage.filterUser.split(":")[1] : ""}
                 onChange={(e) =>
                   this.handleFilterUserChange2(e.target.value, indx)
                 }
-                style={{ width: "64px" }}
+                style={{ width: "75px" }}
               >
                 {this.props.model.filterMetadata.columns[
                   stage.filterUser.split(":")[0]
@@ -639,28 +661,13 @@ export class Agenda extends React.Component<IProps, IState> {
             <option value="alternates">Alternates</option>
           </EditableOption>
 
-          <span data-tip={sourceTooltipMessage}>
-            <i
-              className="material-icons"
-              style={{
-                fontSize: "17px",
-                lineHeight: "0",
-                position: "relative",
-                top: "4px",
-                marginRight: "5px",
-              }}
-            >
-              info
-            </i>
-          </span>
-
           {this.calculateSourceValue(indx) === "inline" && (
-            <EditableString
-              type="text"
+            <EditableTextarea
+              className="autosizeTextarea"
               value={stage.sourceInline}
               placeholder="Enter list of comma separated names"
-              style={{ width: "220px" }}
               onChange={(e) => this.handleSInlineChange(e.target.value, indx)}
+              style={{ width: "340px" }}
             />
           )}
           {this.calculateSourceValue(indx) === "slate" && (
@@ -670,7 +677,7 @@ export class Agenda extends React.Component<IProps, IState> {
                 type="text"
                 value={stage.sourceSlate.replace(SLATE_BASE_URL, "")}
                 placeholder="Enter slate URL or ID"
-                style={{ width: "200px" }}
+                style={{ width: "316px" }}
                 onChange={(e) => this.handleSSlateChange(e.target.value, indx)}
               />
               <datalist id={`slate-${indx}`}>
@@ -746,6 +753,11 @@ export class Agenda extends React.Component<IProps, IState> {
     );
   });
 
+  private autosizing() {
+    autosize.destroy(document.querySelectorAll(".autosizeTextarea"));
+    autosize(document.querySelectorAll(".autosizeTextarea"));
+  }
+
   componentDidMount() {
     window.addEventListener("beforeunload", (e) => {
       if (!this.state.isDirty) {
@@ -771,6 +783,8 @@ export class Agenda extends React.Component<IProps, IState> {
         this.populateSlatesMap(stage.sourceSlate);
       }
     });
+
+    this.autosizing();
   }
 
   render() {
