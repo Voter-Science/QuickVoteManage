@@ -62,6 +62,10 @@ export interface IStageDescription {
   // Default to false.
   forbidUndervote?: boolean;
 
+  // This stage is a breakout. 
+  // Text field is the id.  
+  sourceSplit?: string;
+
   // The "source" fields are all exclusive. They determine where the candidates come frome
   // If set, the URL of the Slate. Will look like:
   // https://petitionbuilder.org/slate/85a7fe1888d04cec88cedd387cfbf5b6
@@ -254,8 +258,9 @@ export class QVClient {
   }
 
   public PostStartQuickPoll(message: string): Promise<void> {
-    const plainUri = `/election/${this.GetShortId()}/ajaxquickpoll?msg=${message}`;
+    const plainUri = `/election/${this.GetShortId()}/ajaxquickpoll`;
     const uri = new XC.UrlBuilder(plainUri);
+    uri.addQuery("msg", message);
     return this._http.postAsync(uri, {});
   }
 
