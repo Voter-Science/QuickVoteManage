@@ -141,7 +141,7 @@ export class Agenda extends React.Component<IProps, IState> {
   private handlePageDateChange(date: Date): void {
     const modelCopy = { ...this.props.model };
     modelCopy.targetDate = date;
-    this.props.setModel(modelCopy);
+    this.props.setModel(modelCopy, () => this.save());
     this.setState({ isDirty: true });
   }
 
@@ -238,8 +238,6 @@ export class Agenda extends React.Component<IProps, IState> {
               <DatePicker
                 selected={new Date(this.props.model.targetDate)}
                 onChange={this.handlePageDateChange}
-                onSelect={this.save}
-                onBlur={this.save}
               />
             </div>
           </Grid>
