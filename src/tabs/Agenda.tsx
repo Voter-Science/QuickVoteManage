@@ -314,8 +314,9 @@ export class Agenda extends React.Component<IProps, IState> {
     this.handleNWinnersChange = this.handleNWinnersChange.bind(this);
     this.handleFilterUserChange1 = this.handleFilterUserChange1.bind(this);
     this.handleFilterUserChange2 = this.handleFilterUserChange2.bind(this);
-    this.handleSouceChange = this.handleSouceChange.bind(this);
+    this.handleSourceChange = this.handleSourceChange.bind(this);
     this.handleSInlineChange = this.handleSInlineChange.bind(this);
+    this.handleSSplitChange = this.handleSSplitChange.bind(this);
     this.handleSSlateChange = this.handleSSlateChange.bind(this);
     this.populateSlatesMap = this.populateSlatesMap.bind(this);
 
@@ -426,6 +427,15 @@ export class Agenda extends React.Component<IProps, IState> {
     this.setState({ isDirty: true });
   }
 
+  private handleSSplitChange(val: string, index: number): void {
+    const modelCopy = { ...this.props.model };
+    const stagesCopy = [...this.props.model.stages];
+    stagesCopy[index].sourceSplit = val;
+    modelCopy.stages = stagesCopy;
+    this.props.setModel(modelCopy);
+    this.setState({ isDirty: true });
+  }
+
   private handleSSlateChange(val: string, index: number): void {
     const modelCopy = { ...this.props.model };
     const stagesCopy = [...this.props.model.stages];
@@ -456,7 +466,7 @@ export class Agenda extends React.Component<IProps, IState> {
     }
   }
 
-  private handleSouceChange(val: string, index: number): void {
+  private handleSourceChange(val: string, index: number): void {
     const modelCopy = { ...this.props.model };
     const stagesCopy = [...this.props.model.stages];
 
@@ -465,24 +475,35 @@ export class Agenda extends React.Component<IProps, IState> {
       stagesCopy[index].sourceInline = "Yes,No";
       stagesCopy[index].sourceAlternates = false;
       stagesCopy[index].sourceSlate = null;
+      stagesCopy[index].sourceSplit = null;
     }
 
     if (val === "inline") {
       stagesCopy[index].sourceInline = "";
       stagesCopy[index].sourceAlternates = false;
       stagesCopy[index].sourceSlate = null;
+      stagesCopy[index].sourceSplit = null;
     }
 
     if (val === "slate") {
       stagesCopy[index].sourceInline = null;
       stagesCopy[index].sourceAlternates = false;
       stagesCopy[index].sourceSlate = "";
+      stagesCopy[index].sourceSplit = null;
     }
 
     if (val === "alternates") {
       stagesCopy[index].sourceInline = null;
       stagesCopy[index].sourceAlternates = true;
       stagesCopy[index].sourceSlate = null;
+      stagesCopy[index].sourceSplit = null;
+    }
+
+    if (val === "sourceSplit") {
+      stagesCopy[index].sourceInline = null;
+      stagesCopy[index].sourceAlternates = false;
+      stagesCopy[index].sourceSlate = null;
+      stagesCopy[index].sourceSplit = "";
     }
 
     modelCopy.stages = stagesCopy;
@@ -501,6 +522,10 @@ export class Agenda extends React.Component<IProps, IState> {
 
     if (typeof stage.sourceInline === "string") {
       return "inline";
+    }
+
+    if (typeof stage.sourceSplit === "string") {
+      return "sourceSplit";
     }
 
     if (typeof stage.sourceSlate === "string") {
@@ -653,12 +678,13 @@ export class Agenda extends React.Component<IProps, IState> {
         <div>
           <EditableOption
             value={this.calculateSourceValue(indx)}
-            onChange={(e) => this.handleSouceChange(e.target.value, indx)}
+            onChange={(e) => this.handleSourceChange(e.target.value, indx)}
           >
             <option value="yn">Yes/No</option>
             <option value="inline">Inline</option>
             <option value="slate">Slate</option>
             <option value="alternates">Alternates</option>
+            <option value="sourceSplit">SourceSplit</option>
           </EditableOption>
 
           {this.calculateSourceValue(indx) === "inline" && (
@@ -718,6 +744,14 @@ export class Agenda extends React.Component<IProps, IState> {
                 )}
               </div>
             </>
+          )}
+          {this.calculateSourceValue(indx) === "sourceSplit" && (
+            <EditableString
+              value={stage.sourceSplit}
+              placeholder="Enter election ID"
+              onChange={(e) => this.handleSSplitChange(e.target.value, indx)}
+              style={{ width: "340px" }}
+            />
           )}
         </div>
         {!this.props.readonly && indx > this.props.model.stage && (
