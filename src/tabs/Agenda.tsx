@@ -684,7 +684,7 @@ export class Agenda extends React.Component<IProps, IState> {
             <option value="inline">Inline</option>
             <option value="slate">Slate</option>
             <option value="alternates">Alternates</option>
-            <option value="sourceSplit">SourceSplit</option>
+            <option value="sourceSplit">Breakout</option>
           </EditableOption>
 
           {this.calculateSourceValue(indx) === "inline" && (
