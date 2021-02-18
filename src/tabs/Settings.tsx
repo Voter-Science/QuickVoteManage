@@ -110,7 +110,7 @@ const RemoveStage = styled.button`
   }
 `;
 
-export class Agenda extends React.Component<IProps, IState> {
+export class Settings extends React.Component<IProps, IState> {
   public constructor(props: any) {
     super(props);
 
@@ -282,7 +282,7 @@ export class Agenda extends React.Component<IProps, IState> {
           <Grid>
             <>
               {this.props.model.owners.owners.map((owner, index) => (
-                <Owner>
+                <Owner key={index}>
                   <Input
                     value={owner}
                     type="text"
@@ -322,4 +322,4 @@ export class Agenda extends React.Component<IProps, IState> {
   }
 }
 
-export default Agenda;
+export default Settings;
