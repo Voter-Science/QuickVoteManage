@@ -11,9 +11,11 @@ import * as XC from "trc-httpshim/xclient";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
+import { DownloadCsv } from "trc-react/dist/DownloadCsv";
 
 import * as QV from "../QVClient";
 import * as Slates from "../SlateClient";
+import { ISheetContents } from "trc-sheet/sheetContents";
 
 interface IProps {
   authToken: string;
@@ -821,7 +823,33 @@ export class Agenda extends React.Component<IProps, IState> {
     this.autosizing();
   }
 
+  private generateCsvData(): ISheetContents {
+    const csvData: ISheetContents = {
+      Policy: [],
+      Title: [],
+      nWinners: [],
+      ForbidUndervote: [],
+      SourceInline: [],
+      SourceAlternates: [],
+      SourceSlate: [],
+      SourceSplit: [],
+    };
+    this.props.model.stages.forEach((stage) => {
+      csvData.Policy.push(stage.policy);
+      csvData.Title.push(stage.title);
+      csvData.nWinners.push(stage.nWinners?.toString());
+      csvData.ForbidUndervote.push(stage.forbidUndervote?.toString());
+      csvData.SourceInline.push(stage.sourceInline);
+      csvData.SourceAlternates.push(stage.sourceAlternates?.toString());
+      csvData.SourceSlate.push(stage.sourceSlate);
+      csvData.SourceSplit.push(stage.sourceSplit);
+    });
+    return csvData;
+  }
+
   render() {
+    const csvData = this.generateCsvData();
+
     return (
       <>
         {!this.props.readonly && (
@@ -914,6 +942,9 @@ export class Agenda extends React.Component<IProps, IState> {
         {!this.props.readonly && (
           <>
             <HorizontalList alignRight>
+              {this.props.model.stages.length > 0 && (
+                <DownloadCsv data={csvData} />
+              )}
               <Button
                 onClick={this.addStage}
                 disabled={this.state.saving || this.props.model.done}
