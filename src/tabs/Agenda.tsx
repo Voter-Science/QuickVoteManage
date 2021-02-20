@@ -829,20 +829,23 @@ export class Agenda extends React.Component<IProps, IState> {
       Title: [],
       nWinners: [],
       ForbidUndervote: [],
-      SourceInline: [],
-      SourceAlternates: [],
-      SourceSlate: [],
-      SourceSplit: [],
+      SourceType: [],
+      SourceParameter: [],
     };
-    this.props.model.stages.forEach((stage) => {
+    this.props.model.stages.forEach((stage, index) => {
+      let sourceType = this.calculateSourceValue(index);
+      sourceType = sourceType === "inline" ? "sourceInline" : sourceType;
+      sourceType = sourceType === "yn" ? "sourceInline" : sourceType;
+      sourceType =
+        sourceType === "alternates" ? "sourceAlternates" : sourceType;
+      sourceType = sourceType === "slate" ? "sourceSlate" : sourceType;
       csvData.Policy.push(stage.policy);
       csvData.Title.push(stage.title);
       csvData.nWinners.push(stage.nWinners?.toString());
       csvData.ForbidUndervote.push(stage.forbidUndervote?.toString());
-      csvData.SourceInline.push(stage.sourceInline);
-      csvData.SourceAlternates.push(stage.sourceAlternates?.toString());
-      csvData.SourceSlate.push(stage.sourceSlate);
-      csvData.SourceSplit.push(stage.sourceSplit);
+      csvData.SourceType.push(sourceType);
+      // @ts-ignore
+      csvData.SourceParameter.push(stage[sourceType]?.toString());
     });
     return csvData;
   }
