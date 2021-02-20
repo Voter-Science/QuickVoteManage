@@ -921,7 +921,9 @@ export class Agenda extends React.Component<IProps, IState> {
 
         {this.state.importActive && (
           <Modal close={() => this.setState({ importActive: false })}>
-            <CsvInput onSubmit={this.csvImport} />
+            <div style={{ width: "400px" }}>
+              <CsvInput onSubmit={this.csvImport} />
+            </div>
           </Modal>
         )}
 
