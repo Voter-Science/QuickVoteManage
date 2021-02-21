@@ -1003,7 +1003,7 @@ export class Agenda extends React.Component<IProps, IState> {
                 onClick={() => this.setState({ importActive: true })}
                 disabled={this.state.saving || this.props.model.done}
               >
-                Import form CSV
+                Import from CSV
               </Button>
               <Button
                 onClick={this.addStage}
