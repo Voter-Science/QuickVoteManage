@@ -11,9 +11,13 @@ import * as XC from "trc-httpshim/xclient";
 import { Copy } from "trc-react/dist/common/Copy";
 import { HorizontalList } from "trc-react/dist/common/HorizontalList";
 import { Button } from "trc-react/dist/common/Button";
+import Modal from "trc-react/dist/common/Modal";
+import { DownloadCsv } from "trc-react/dist/DownloadCsv";
+import { CsvInput } from "trc-react/dist/CsvInput";
 
 import * as QV from "../QVClient";
 import * as Slates from "../SlateClient";
+import { ISheetContents } from "trc-sheet/sheetContents";
 
 interface IProps {
   authToken: string;
@@ -31,6 +35,7 @@ interface IState {
   loadingSlates: boolean;
   slates: Slates.ISlate[];
   slatesMap: { [dynamic: string]: boolean | Slates.ISlate };
+  importActive: boolean;
 }
 
 function arrayMove(arr: any[], oldIndex: number, newIndex: number) {
@@ -293,6 +298,7 @@ export class Agenda extends React.Component<IProps, IState> {
       loadingSlates: true,
       slates: [],
       slatesMap: {},
+      importActive: false,
     };
 
     const server2 = "https://trc-login.voter-science.com";
@@ -323,6 +329,7 @@ export class Agenda extends React.Component<IProps, IState> {
     this.calculateSourceValue = this.calculateSourceValue.bind(this);
 
     this.updateSorting = this.updateSorting.bind(this);
+    this.csvImport = this.csvImport.bind(this);
 
     this.save = this.save.bind(this);
   }
@@ -338,6 +345,7 @@ export class Agenda extends React.Component<IProps, IState> {
       sourceSlate: null,
       sourceInline: "CandidateA, CandidateB, CandidateC",
       sourceAlternates: false,
+      sourceSplit: null,
     });
     modelCopy.stages = stagesCopy;
     this.props.setModel(modelCopy, () => {
@@ -821,7 +829,71 @@ export class Agenda extends React.Component<IProps, IState> {
     this.autosizing();
   }
 
+  private generateCsvData(): ISheetContents {
+    const csvData: ISheetContents = {
+      Policy: [],
+      Title: [],
+      nWinners: [],
+      ForbidUndervote: [],
+      SourceType: [],
+      SourceParameter: [],
+    };
+    this.props.model.stages.forEach((stage, index) => {
+      let sourceType = this.calculateSourceValue(index);
+      sourceType = sourceType === "inline" ? "sourceInline" : sourceType;
+      sourceType = sourceType === "yn" ? "sourceInline" : sourceType;
+      sourceType =
+        sourceType === "alternates" ? "sourceAlternates" : sourceType;
+      sourceType = sourceType === "slate" ? "sourceSlate" : sourceType;
+      csvData.Policy.push(stage.policy);
+      csvData.Title.push(stage.title);
+      csvData.nWinners.push(stage.nWinners?.toString());
+      csvData.ForbidUndervote.push(stage.forbidUndervote?.toString());
+      csvData.SourceType.push(sourceType);
+      // @ts-ignore
+      csvData.SourceParameter.push(stage[sourceType]?.toString());
+    });
+    return csvData;
+  }
+
+  private csvImport(data: ISheetContents) {
+    try {
+      const modelCopy = { ...this.props.model };
+      modelCopy.stages = [];
+      data.Policy.forEach((_: any, index: number) => {
+        modelCopy.stages.push({
+          policy: data.Policy[index],
+          title: data.Title[index],
+          nWinners: parseInt(data.nWinners[index]),
+          forbidUndervote:
+            data.ForbidUndervote[index] === ""
+              ? null
+              : !(data.ForbidUndervote[index] === "false"),
+          sourceSlate:
+            data.SourceType[index] === "sourceSlate"
+              ? data.SourceParameter[index]
+              : null,
+          sourceInline:
+            data.SourceType[index] === "sourceInline"
+              ? data.SourceParameter[index]
+              : null,
+          sourceAlternates: data.SourceType[index] === "sourceAlternates",
+          sourceSplit:
+            data.SourceType[index] === "sourceSplit"
+              ? data.SourceParameter[index]
+              : null,
+        });
+      });
+      this.setState({ isDirty: true, importActive: false });
+      this.props.setModel(modelCopy);
+    } catch {
+      alert("Import failed, please try again.");
+    }
+  }
+
   render() {
+    const csvData = this.generateCsvData();
+
     return (
       <>
         {!this.props.readonly && (
@@ -845,6 +917,14 @@ export class Agenda extends React.Component<IProps, IState> {
               <h4 style={{ marginTop: `2rem` }}>Stages:</h4>
             </Copy>
           </>
+        )}
+
+        {this.state.importActive && (
+          <Modal close={() => this.setState({ importActive: false })}>
+            <div style={{ width: "400px" }}>
+              <CsvInput onSubmit={this.csvImport} />
+            </div>
+          </Modal>
         )}
 
         <ReactTooltip />
@@ -914,6 +994,17 @@ export class Agenda extends React.Component<IProps, IState> {
         {!this.props.readonly && (
           <>
             <HorizontalList alignRight>
+              {this.props.model.stages.length > 0 && (
+                <DownloadCsv data={csvData} />
+              )}
+              <Button
+                secondary
+                style={{ marginRight: "2rem" }}
+                onClick={() => this.setState({ importActive: true })}
+                disabled={this.state.saving || this.props.model.done}
+              >
+                Import form CSV
+              </Button>
               <Button
                 onClick={this.addStage}
                 disabled={this.state.saving || this.props.model.done}
