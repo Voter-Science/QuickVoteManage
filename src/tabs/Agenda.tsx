@@ -834,6 +834,7 @@ export class Agenda extends React.Component<IProps, IState> {
       Policy: [],
       Title: [],
       nWinners: [],
+      Who: [],
       ForbidUndervote: [],
       SourceType: [],
       SourceParameter: [],
@@ -848,6 +849,7 @@ export class Agenda extends React.Component<IProps, IState> {
       csvData.Policy.push(stage.policy);
       csvData.Title.push(stage.title);
       csvData.nWinners.push(stage.nWinners?.toString());
+      csvData.Who.push(stage.filterUser);
       csvData.ForbidUndervote.push(stage.forbidUndervote?.toString());
       csvData.SourceType.push(sourceType);
       // @ts-ignore
@@ -865,6 +867,7 @@ export class Agenda extends React.Component<IProps, IState> {
           policy: data.Policy[index],
           title: data.Title[index],
           nWinners: parseInt(data.nWinners[index]),
+          filterUser: data.Who[index],
           forbidUndervote:
             data.ForbidUndervote[index] === ""
               ? null
